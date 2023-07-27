@@ -11,9 +11,9 @@ del_x = 0.01; del_y = 0.05;
 %q = 0.45;
 d_m = 0.3; 
 a = 2.0; %capture rate of plant by frugivore
-del_m = 8:0.02:10; %I'm only not starting from zero because the computational costs are absurd
+del_m = 5:0.4:50; %I'm only not starting from zero because the computational costs are absurd
 %a = 0.51:0.01:0.81;%0.7-1.1 seems to work for this fig.
-q = 0.91:0.01:0.94;
+q = 0.26:0.005:1.00; %feasibility domain for low a -- 0.855:0.005:1.00; feasibility domain for high a
 [Del,Q] = meshgrid(del_m,q);
 
 Del_col = Del(:); Q_col = Q(:);
@@ -164,6 +164,6 @@ ylabel ('consumption fraction (q)')
 title('Fraction of patches occupied vs mutualist dispersal rate and predation rate')
 %legend('Species with mutualist (x)')%, 'Species without mutualist (y)',
 %'mutualist (m)', 'location', 'best' )
-print('spat_fit_q_del_m_equmcalc','-djpeg','-r600')
+print('spat_fit_q_del_m_equmcalc_high_a','-djpeg','-r600')
    
     
