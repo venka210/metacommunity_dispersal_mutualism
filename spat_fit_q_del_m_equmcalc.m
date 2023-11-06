@@ -1,4 +1,4 @@
-clear all
+clearvars
 
 %% parameter definition
 r_x = 5; r_y = 5;
@@ -11,9 +11,9 @@ del_x = 0.01; del_y = 0.05;
 %q = 0.45;
 d_m = 0.3; 
 a = 2.0; %capture rate of plant by frugivore
-del_m = 5:0.4:50; %I'm only not starting from zero because the computational costs are absurd
+del_m = 4.5:0.5:30; %I'm only not starting from zero because the computational costs are absurd
 %a = 0.51:0.01:0.81;%0.7-1.1 seems to work for this fig.
-q = 0.26:0.005:1.00; %feasibility domain for low a -- 0.855:0.005:1.00; feasibility domain for high a
+q = 0.25:0.01:0.97;
 [Del,Q] = meshgrid(del_m,q);
 
 Del_col = Del(:); Q_col = Q(:);
@@ -22,13 +22,13 @@ num_combinations = numel(Q_col);
 
 k_eff = 1; %efficiency of dispersing seeds to habitable patches
 
-z_x = 0.7; z_y = 0.7; z_m = 0.4; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
+z_x = 0.7; z_y = 0.7; z_m = 0.4; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_y does not change qual. change results
 
-e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.05; e_mxmin = e_xmin;
+e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.02; e_mxmin = e_xmin;
 
 tspan = [0,1000];
 
-k_x = 0.08; k_y = 0.08; k_m = 0.08;
+k_x = 0.08; k_y = 0.08; k_m = 0.10;
 
 x_init = 0.1; y_init = 0.1; m_init = 0.1;
     
@@ -55,6 +55,7 @@ if all(K_y > yes_m_low_lim) && all(K_y < yes_m_upp_lim)
     disp('stable local coexistence w/ mutualist')
 else
     error('no stable local coexistence w/ mutualist')
+    %yes_m_low_lim = reshape(yes_m_low_lim,size(Del,1),size(Del,2) )
 end
 
 %% Local dynamics - equilibrium expressions assuming no competitive exclusion occurs
@@ -69,25 +70,32 @@ x_star = (Del_col' + d_m)./(a*Q_col');
 y_star = K_y.*(1 - (del_y/r_y)) - alpha_yx.*x_star;
 m_star = (1/a).*((r_x/K_x).*(K_x-x_star-(alpha_xy.*y_star))-del_x);
 
-if (any(x_star > K_x) | any(x_star < 0) | any(imag(x_star)~=0))
+if (any(x_star > K_x) | any(x_star < 0) | any(imag(x_star)~=0)) %#ok<*OR2>
     % If condition is true, throw an error and stop execution
     error('x popln is out of bounds');
+    %x_star(x_star > K_x) = 0; x_star(x_star < 0) = 0; x_star(imag(x_star)~=0) = 0;
+    %x_tilde = zeros(size(Del,1),size(Del,2)); y_tilde =0; x_star = 0; y_star = 0; m_star = 0;
 end
 
 if (any(y_star > K_y) | any(y_star < 0) | any(imag(y_star)~=0))
     error('y popln is out of bounds');
+    %y_star(y_star > K_y) = 0; ystar(y_star < 0) = 0; ystar(imag(y_star)~=0) = 0;
 end
 
 if (any(m_star > K_x) | any(m_star < 0) | any(imag(m_star)~=0))
     error('m popln is out of bounds');
+    %m_star(m_star > K_x) = 0; m_star(m_star < 0) = 0; m_star(imag(m_star)~=0) = 0;
 end
 
 %% Linking local and global dynamics
 
 %Extinction equations
+
 e_x = e_xmin.*((K_x./x_tilde).^z_x);e_y = e_ymin.*(K_y./(y_star)).^z_y;
 e_mx = e_xmin.*(K_x./(x_star)).^z_x;
 e_m = e_mmin.*(K_x./(m_star)).^z_m; %assume max population size of mutualist is similar to that of x and y
+
+%e_x(e_x == NaN) = 1000; e_y(e_y == NaN) = 1000; e_mx(e_mx == NaN) = 1000; e_m(e_m == NaN) = 1000;
 
 if (any(e_m < 0) | any(imag(e_m)~=0))
     % If condition is true, throw an error and stop execution
@@ -95,7 +103,7 @@ if (any(e_m < 0) | any(imag(e_m)~=0))
 end
 
 
-mu = e_mx - e_x;
+mu = e_mx - e_x; %mutualist induced extinction rate of x
 
 %Colonisation equations
 c_x = (k_x*del_x).*x_tilde;
@@ -103,18 +111,23 @@ c_y = k_y*del_y.*y_star;
 c_m = k_m*Del_col'.*m_star; %repelem(del_m,numel(q)) can also be used in place of Del_col' if u feel funky
 c_mx =(k_x*del_x+k_m*k_eff*a.*(1-Q_col').*Del_col'.*m_star).*x_star;
 
-lambda = c_mx-c_x;
+lambda = c_mx-c_x; %mutualism aided colonisation rate of x
 
 %% Global dynamics - equilibrium expressions
+
 
 gamma = (0.5.*((lambda.*(1+(e_m./c_m))+c_x)-(e_x+mu)))./(c_x+lambda);%0.5*(1-((mu-e_x-e_m)/(c_x+c_m)));
 
 eta2 = (e_m./c_m).*((mu-lambda)./(c_x+lambda));
+eta_all = sqrt(gamma.^2+eta2); eta_all_new = eta_all;
 
-px_star_pos = gamma + sqrt(gamma.^2+eta2);
-px_star_neg = gamma - sqrt(gamma.^2+eta2);
+eta_all_new(imag(eta_all_new) ~= 0) = 0;
+
+px_star_pos = gamma + eta_all_new;
+px_star_pos(isnan(px_star_pos)) = 0;
+px_star_neg = gamma - eta_all_new;
 py_star = 1 - (e_y./c_y);
-pm_star = px_star_pos - (e_m./c_m);
+pm_star = max(px_star_pos - (e_m./c_m),0);
  %Note: 'any' and 'all' commands work on something that is already in logical
  %form i.e. arrays if zeros and ones which are logical
  
@@ -164,6 +177,6 @@ ylabel ('consumption fraction (q)')
 title('Fraction of patches occupied vs mutualist dispersal rate and predation rate')
 %legend('Species with mutualist (x)')%, 'Species without mutualist (y)',
 %'mutualist (m)', 'location', 'best' )
-print('spat_fit_q_del_m_equmcalc_high_a','-djpeg','-r600')
+print('spat_fit_q_del_m_equmcalc','-djpeg','-r600')
    
     
