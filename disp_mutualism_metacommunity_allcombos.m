@@ -29,14 +29,14 @@ spp_init = [x_init; y_init; m_init];
 
 %variable collectors across parameter sweeps
 
-occupancy_del_m = zeros(size(del_m,1),3);
-eta_check = zeros(size(del_m,1),1);
-mu_collector = zeros(size(del_m,1),1);
-gamma = zeros(size(del_m,1),1);
-cm_collector = zeros(size(del_m,1),1);
-eta2 = zeros(size(del_m,1),1);
-em_collector = zeros(size(del_m,1),1);
-lambda_collector = zeros(size(del_m,1),1);
+% occupancy_del_m = zeros(size(del_m,1),3);
+% eta_check = zeros(size(del_m,1),1);
+% mu_collector = zeros(size(del_m,1),1);
+% gamma = zeros(size(del_m,1),1);
+% cm_collector = zeros(size(del_m,1),1);
+% eta2 = zeros(size(del_m,1),1);
+% em_collector = zeros(size(del_m,1),1);
+% lambda_collector = zeros(size(del_m,1),1);
 
 
 %% within patch dynamics
