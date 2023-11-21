@@ -4,7 +4,7 @@ clear vars
 %% parameter definitions
 r_x = 5; r_y = 5;
 
-alpha_xy = 0.73; alpha_yx = 0.54; %really only affects y's local density and dispersal
+alpha_xy = 0.73; alpha_yx = 0.60; %really only affects y's local density and dispersal
 
 K_x = 200; K_y = 200; %no point touching this
 
@@ -37,7 +37,7 @@ spp_init_no_y = [x_init; 0; m_init];
 spp_init_no_x = [0; y_init; m_init];
 spp_init = [x_init; y_init; m_init];
 
-
+f = 1.0; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
 %variable collectors across parameter sweeps
 
 % occupancy_del_m = zeros(size(del_m,1),3);
@@ -48,12 +48,19 @@ spp_init = [x_init; y_init; m_init];
 % eta2 = zeros(size(del_m,1),1);
 % em_collector = zeros(size(del_m,1),1);
 % lambda_collector = zeros(size(del_m,1),1);
-%%
+
+%% Local patch dynamics
 
 options = odeset('Events',@nonNegativeEvent);
-[t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations), tspan./10, repmat(spp_init_no_m,1,num_combinations));
-[t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations), tspan./10, repmat(spp_init_no_y,1,num_combinations));
-[t_patch,local_dens] = ode45(@(t,y)vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations), tspan, repmat(spp_init, 1, num_combinations), options);
+% [t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations), tspan./10, repmat(spp_init_no_m,1,num_combinations));
+% [t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations), tspan./10, repmat(spp_init_no_y,1,num_combinations));
+% [t_patch,local_dens] = ode45(@(t,y)vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations), tspan, repmat(spp_init, 1, num_combinations), options);
+
+% in case the frugivore is a generalist
+[t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_m,1,num_combinations));
+[t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_y,1,num_combinations));
+[t_patch,local_dens] = ode45(@(t,y)vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init, 1, num_combinations), options);
+
 
 num_timepoints_no_m = length(t_patch_no_m);
 num_timepoints_no_y = length(t_patch_no_y);
