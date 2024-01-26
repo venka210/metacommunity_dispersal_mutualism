@@ -10,10 +10,10 @@ K_x = 200; K_y = 200; %no point touching this
 
 del_x = 0.01; del_y = 0.05;
 %q = 0.45;
-d_m = 0.3; a = 0.95;%reducing 'a' reduces dispersal rates where px > py
-del_m = 15:1:60; %I'm only not starting from zero because the computational costs are absurd
+d_m = 0.01; a = 1;%reducing 'a' reduces dispersal rates where px > py
+del_m = 2:1:46; %I'm only not starting from zero because the computational costs are absurd
 %a = 0.51:0.01:0.81;%0.7-1.1 seems to work for this fig.
-q = 0.70:0.01:1.0;
+q = 0.5:0.05:1.0;
 [Del,Q] = meshgrid(del_m,q);
 
 Del_col = Del(:); Q_col = Q(:); 
@@ -24,7 +24,7 @@ k_eff = 1.0; %efficiency of dispersing seeds to habitable patches
 
 z_x = 0.7; z_y = 0.7; z_m = 0.4; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
 
-e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.16; e_mxmin = e_xmin; 
+e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.03; e_mxmin = e_xmin; 
 
 tspan = [0,1000];
 
@@ -88,27 +88,29 @@ e_mx = e_mmin.*(K_x./(local_dens_no_y_3d(3,:))).^z_m; e_mxy = e_mmin.*(K_x./(loc
     
 %mu = e_mx - e_x;
 
-tspan_meta = [0,5000];
+tspan_meta = [0,1000];
 
 % c_x = (k_x.*del_x)..*local_dens_no_m_3d(1,:);
 % c_y = k_y.*del_y..*local_dens_3d(2,:);
 % c_m = k_m.*Del_col'..*local_dens_3d(3,:);%repelem(del_m,numel(q)) can also be used in place of Del_col' if u feel funky
 % c_mx =(k_x.*del_x+k_m.*k_eff.*a..*(1-Q_col')..*Del_col'..*local_dens_3d(3,:))..*local_dens_3d(1,:);
 
-c_x0 = (k_x.*del_x).*K_x; c_y0 = (k_y.*del_y).*K_y; %patches with only one species
+%c_x0 = (k_x.*del_x).*K_x; c_y0 = (k_y.*del_y).*K_y; %patches with only one species
+c_x0 = (k_x.*del_x).*K_x*(1-(del_x/r_x));
+c_y0 = (k_y.*del_y).*K_y*(1-(del_y/r_y)); 
 c_xy = (k_x.*del_x).*local_dens_no_m_3d(1,:); c_yx = (k_y.*del_y).*local_dens_no_m_3d(2,:); c_mx = k_m.*Del_col'.*local_dens_no_y_3d(3,:);%patches with 2 species
-c_xm = k_x.*del_x.*local_dens_no_y_3d(1,:); c_ym = (k_y.*del_y).*K_y; % patches with one plant-one frugivore
-c_xym =(k_x.*del_x+k_m.*k_eff.*a.*(1-Q_col').*Del_col'.*local_dens_3d(3,:)).*local_dens_3d(1,:); c_yxm = k_y.*del_y.*local_dens_3d(2,:); c_mxy = k_m.*Del_col'.*local_dens_3d(3,:);%all species present
-
-
+c_xm = ((k_x.*del_x)+k_m*k_eff.*Del_col'.*local_dens_no_y_3d(3,:)).*local_dens_no_y_3d(1,:);%k_x.*del_x.*local_dens_no_y_3d(1,:); 
+c_ym = (k_y.*del_y).*K_y*(1-(del_y/r_y));%(k_y.*del_y).*K_y; % patches with one plant-one frugivore
+c_xym = (k_x.*del_x+k_m.*k_eff.*f.*Del_col'.*local_dens_3d(3,:)).*local_dens_3d(1,:); c_yxm = k_y.*del_y.*local_dens_3d(2,:); c_mxy = k_m.*Del_col'.*local_dens_3d(3,:);%all species present
 
 
 %lambda = c_mx-c_x;
 %%
 
 %options2 = odeset('NonNegative',[1,2,3]);
+frac_occup_init = [0.1,0.1,0.1];
 [t_syst, frac_occup] = ode45(@(t,y)vectorized_BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
-    e_mx, e_mxy, num_combinations), tspan_meta, local_dens_3d(:));
+    e_mx, e_mxy, num_combinations), tspan_meta, repelem(frac_occup_init,num_combinations));
 
 
 num_tpts_t_syst = length(t_syst); frac_occup_3d = reshape(frac_occup(end,:), [],num_combinations);

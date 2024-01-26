@@ -3,18 +3,18 @@ clear vars
 %% parameter definition
 r_x = 5; r_y = 5;
 
-alpha_xy = 0.73; alpha_yx = 0.60; %really only affects y's local density and dispersal
+alpha_xy = 0.73; alpha_yx = 0.60; %really only affects y's local density and dispersal -- alpha_xy = 0.73; alpha_yx = 0.60;
 
 K_x = 200; K_y = 200; %no point touching this
 
-del_x = 0.01; del_y = 0.05; del_m = 12:0.3:35; %I'm only not starting from zero because the computational costs are absurd
+del_x = 0.01; del_y = 0.05; del_m = 0:0.02:10; %I'm only not starting from zero because the computational costs are absurd
 
-a = 2.0; q = 0.85; d_m = 0.3; %
+a = 1.5; q = 0.5; d_m = 0.01; %
 k_eff = 1; %efficiency of dispersing seeds to habitable patches
 
-z_x = 0.7; z_y = 0.7; z_m = 0.4; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
+z_x = 0.8; z_y = 0.8; z_m = 0.4; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
 
-e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.05; e_mxmin = e_xmin;
+e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.03; e_mxmin = e_xmin;
 
 tspan = [0,1000];
 
@@ -29,7 +29,7 @@ spp_init = [x_init; y_init; m_init];
 
 %variable collectors across parameter sweeps
 
-% occupancy_del_m = zeros(size(del_m,1),3);
+occupancy_del_m = zeros(size(del_m,1),3);
 % eta_check = zeros(size(del_m,1),1);
 % mu_collector = zeros(size(del_m,1),1);
 % gamma = zeros(size(del_m,1),1);
@@ -44,8 +44,8 @@ spp_init = [x_init; y_init; m_init];
 for i = 1:length(del_m)
     
     options = odeset('NonNegative',[1,2,3]);
-    [t_patch_no_m,local_dens_no_m] = ode45(@(t,y)LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, del_m(i), a, q, d_m), tspan/10, spp_init_no_m);
-    [t_patch_no_y,local_dens_no_y] = ode45(@(t,y)LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, del_m(i), a, q, d_m), tspan/10, spp_init_no_y);
+    [t_patch_no_m,local_dens_no_m] = ode45(@(t,y)LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, del_m(i), a, q, d_m), tspan/10, spp_init_no_m, options);
+    [t_patch_no_y,local_dens_no_y] = ode45(@(t,y)LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, del_m(i), a, q, d_m), tspan/10, spp_init_no_y,options);
     [t_patch,local_dens] = ode45(@(t,y)LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, del_m(i), a, q, d_m), tspan, spp_init, options);
 
 %      figure()
@@ -70,7 +70,7 @@ for i = 1:length(del_m)
 %     end
     %mu = e_mx - e_x;
 
-    tspan_meta = [0, 10000];
+    tspan_meta = [0, 1000];
 
     c_x0 = (k_x*del_x)*K_x; c_y0 = (k_y*del_y)*K_y; %patches with only one species
     c_xy = (k_x*del_x)*local_dens_no_m(end,1); c_yx = (k_y*del_y)*local_dens_no_m(end,2); c_mx = k_m*del_m(i)*local_dens_no_y(end,3);%patches with 2 species
@@ -79,9 +79,13 @@ for i = 1:length(del_m)
 
     %lambda = c_mx-c_x;
     options2 = odeset('NonNegative',[1,2,3]);
+    frac_occup_init = [0.1;0.1;0.1]; %initial patch occupancies of each species x, y, and, m respectively. 
+    if e_mxy == inf
+        frac_occup_init(3,1) = 0;
+    end
 
     [t_syst, frac_occup] = ode45(@(t,y)BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
-    e_mx, e_mxy), tspan_meta, (local_dens(end,:))',options2);
+    e_mx, e_mxy), tspan_meta,frac_occup_init,options2);
     %frac_occup(end,1) = 0;
     
     
@@ -114,7 +118,7 @@ for i = 1:length(del_m)
     
     
 end
-save ("new_params_coexist_nonneg_allcombos.mat")
+%save ("new_params_coexist_nonneg_allcombos.mat")
 %% Figures
 figure()
 plot(del_m, occupancy_del_m(:, 1:3))
@@ -127,22 +131,22 @@ legend('Species with mutualist (x)', 'Species without mutualist (y)', 'mutualist
 %fig1name = sprintf('occupancy_vs_del_m.jpeg');
 print('occupancy_vs_del_m_allc','-djpeg','-r600')
 %%
-figure()
-plot(del_m, gamma+eta_check)
-hold on
-plot(del_m, occupancy_del_m(:,1),'o')
-%plot(del_m, occupancy_del_m(:,3),'o')
-plot(del_m, gamma-eta_check)
-hold off
-xlabel('mutualist dispersal rate (\delta_m)')
-ylabel('Roots of {p_x}^*')
-%xlim([1.0 29.0]);
-%ylim([-1.05 1.05]);
-%xline([1.0 2.6, 10.4, 26.9],'--',{'Exploitative (x extinct)','Mutualism (y fitter)','Mutualism (x fitter)', 'Mutualism (y fitter)'})
-%yline(0.5*(1-((mu-e_x-e_m)/(c_x+c_m))));
-%yline(0.00)
-fig1name = sprintf('eta_vs_del_m_allc.jpeg');
-print(fig1name,'-djpeg','-r600')
+% figure()
+% plot(del_m, gamma+eta_check)
+% hold on
+% plot(del_m, occupancy_del_m(:,1),'o')
+% plot(del_m, occupancy_del_m(:,3),'o')
+% plot(del_m, gamma-eta_check)
+% hold off
+% xlabel('mutualist dispersal rate (\delta_m)')
+% ylabel('Roots of {p_x}^*')
+% xlim([1.0 29.0]);
+% ylim([-1.05 1.05]);
+% xline([1.0 2.6, 10.4, 26.9],'--',{'Exploitative (x extinct)','Mutualism (y fitter)','Mutualism (x fitter)', 'Mutualism (y fitter)'})
+% yline(0.5*(1-((mu-e_x-e_m)/(c_x+c_m))));
+% yline(0.00)
+% fig1name = sprintf('eta_vs_del_m_allc.jpeg');
+% print(fig1name,'-djpeg','-r600')
 
 
 

@@ -7,15 +7,13 @@ alpha_xy = 0.73; alpha_yx = 0.60; %really only affects y's local density and dis
 
 K_x = 200; K_y = 200; %no point touching this
 
-del_x = 0.01; del_y = 0.05; del_m = 3:0.5:24; %I'm only not starting from zero because the computational costs are absurd
+del_x = 0.01; del_y = 0.05; del_m = 3:1:27; %I'm only not starting from zero because the computational costs are absurd
 
-a = 0.50:0.01:0.60;
+a = 0.70:0.01:0.90;
 
+q = 0.45; d_m = 0.03; %
 
-
-q = 0.45; d_m = 0.3; %
-
-k_eff = 0.1; %efficiency of dispersing seeds to habitable patches
+k_eff = 1; %efficiency of dispersing seeds to habitable patches
 
 z_x = 0.7; z_y = 0.7; z_m = 0.4; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
 
@@ -54,7 +52,7 @@ for i = 1:length(del_m)
         %% metacommunity dynamics
 
         e_x = e_xmin*((K_x/(local_dens_no_m(end,1)))^z_x);e_y = e_ymin*(K_y/(local_dens(end,2)))^z_y;
-        e_mx = e_xmin*(K_x/(local_dens(end,1)))^z_x;
+        e_mx = e_xmin*(K_x/(local_dens(end,1)))^z_x; e_mxy=0;
         e_m = e_mmin*(K_x/(local_dens(end,3)))^z_m; %assume max population size of mutualist is similar to that of x and y
 
     %     if local_dens(end,3) == 0
@@ -70,17 +68,19 @@ for i = 1:length(del_m)
     %     end
         mu = e_mx - e_x;
 
-        tspan_meta = [0, 10000];
+        tspan_meta = [0, 1000];
 
         c_x = (k_x*del_x)*local_dens_no_m(end,1);
         c_y = k_y*del_y*local_dens(end,2);
         c_m = k_m*del_m(i)*local_dens(end,3);
-        c_mx =(k_x*del_x+k_m*k_eff*a(j)*(1-q)*del_m(i)*local_dens(end,3))*local_dens(end,1);
+        c_mx =(k_x*del_x+k_m*k_eff*a(j)*(1-q)*del_m(i)*local_dens(end,3))*local_dens(end,1); c_mxy = 0;
 
         lambda = c_mx-c_x;
         options = odeset('NonNegative',1);
 
-        [t_syst, frac_occup] = ode45(@(t,y)BetweenPatchDynamics_new(t,y, c_x, c_y, c_m, e_x, e_y, e_m, mu, lambda), tspan_meta, (local_dens(end,:))',options);
+        [t_syst, frac_occup] = ode15s(@(t,y)BetweenPatchDynamics_new(t,y, c_x, c_y, c_m, e_x, e_y, e_m, mu, lambda), tspan_meta, (local_dens(end,:))',options);
+    %     [t_syst, frac_occup] = ode15s(@(t,y)BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
+    % e_mx, e_mxy);
         %frac_occup(end,1) = 0;
 
 
@@ -117,18 +117,18 @@ for i = 1:length(del_m)
     end
 end
 %save ("new_params_coexist_nonneg.mat")
-% %% Figures
-% figure()
-% plot(del_m, occupancy_del_m(:, 1:3))
-% xlabel('mutualist dispersal rate')
-% %xlim([1.0 29.0]);
-% ylabel('fraction of patches occupied')
-% %xline([1.0 2.6, 10.4, 26.9],'--',{'Exploitative (x extinct)','Mutualism (y fitter)','Mutualism (x fitter)', 'Mutualism (y fitter)'})
-% title('Fraction of patches occupied vs mutualist dispersal rate')
-% legend('Species with mutualist (x)', 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
-% %fig1name = sprintf('occupancy_vs_del_m.jpeg');
-% print('occupancy_vs_del_m','-djpeg','-r600')
-% %%
+%% Figures
+figure()
+plot(del_m, occupancy_del_m(:, 1:3))
+xlabel('mutualist dispersal rate')
+%xlim([1.0 29.0]);
+ylabel('fraction of patches occupied')
+%xline([1.0 2.6, 10.4, 26.9],'--',{'Exploitative (x extinct)','Mutualism (y fitter)','Mutualism (x fitter)', 'Mutualism (y fitter)'})
+title('Fraction of patches occupied vs mutualist dispersal rate')
+legend('Species with mutualist (x)', 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
+%fig1name = sprintf('occupancy_vs_del_m.jpeg');
+print('occupancy_vs_del_m','-djpeg','-r600')
+%%
 % figure()
 % plot(del_m, gamma+eta_check)
 % hold on

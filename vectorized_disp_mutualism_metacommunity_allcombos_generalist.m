@@ -10,34 +10,34 @@ K_x = 200; K_y = 200; %no point touching this
 
 del_x = 0.01; del_y = 0.05;
 %q = 0.45;
-d_m = 0.3; a = 0.8;%reducing 'a' reduces dispersal rates where px > py
-del_m = 5:0.05:15; %I'm only not starting from zero because the computational costs are absurd
+d_m = 1; a = 0.5;%reducing 'a' reduces dispersal rates where px > py
+del_m = 5:1:20; %I'm only not starting from zero because the computational costs are absurd
 %a = 0.51:0.01:0.81;%0.7-1.1 seems to work for this fig.
-q = 0.5:0.02:0.8;
+q = 0.1:0.05:0.4;
 [Del,Q] = meshgrid(del_m,q);
 
 Del_col = Del(:); Q_col = Q(:); 
 
 num_combinations = numel(Q_col); 
 
-k_eff = 1; %efficiency of dispersing seeds to habitable patches
+k_eff = 1.0; %efficiency of dispersing seeds to habitable patches
 
-z_x = 0.6; z_y = 0.6; z_m = 0.3; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
+z_x = 0.7; z_y = 0.7; z_m = 0.3; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
 
-e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.16; e_mxmin = e_xmin; 
+e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.03; e_mxmin = e_xmin; 
 
-tspan = [0,5000];
+tspan = [0,1000];
 
 k_x = 0.08; k_y = 0.08; k_m = 0.08; %
 
-x_init = 0.001; y_init = 0.001; m_init = 0.001;
+x_init = 0.1; y_init = 0.1; m_init = 0.1;
 
 spp_init_no_m = [x_init; y_init; 0];
 spp_init_no_y = [x_init; 0; m_init];
 spp_init_no_x = [0; y_init; m_init];
 spp_init = [x_init; y_init; m_init];
 
-f = 1; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
+f = 0.45; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
 %variable collectors across parameter sweeps
 
 % occupancy_del_m = zeros(size(del_m,1),3);
@@ -50,16 +50,26 @@ f = 1; % f is the fraction of diet consumed by frugivore that consists of 'x'. (
 % lambda_collector = zeros(size(del_m,1),1);
 
 %% Local patch dynamics
-
-options = odeset('Events',@nonNegativeEvent);
+thresholdValue = 10^-4;
+options = odeset('Events',@nonNegativeEvent); options2 =  odeset('Events',@(t, y) eventFunction(t, y, thresholdValue));
 % [t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations), tspan./10, repmat(spp_init_no_m,1,num_combinations));
 % [t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations), tspan./10, repmat(spp_init_no_y,1,num_combinations));
 % [t_patch,local_dens] = ode45(@(t,y)vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations), tspan, repmat(spp_init, 1, num_combinations), options);
 
 % in case the frugivore is a generalist
-[t_patch_no_x,local_dens_no_x] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_x,1,num_combinations));
-[t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_m,1,num_combinations));
-[t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_y,1,num_combinations));
+[t_patch_no_x,local_dens_no_x] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_x,1,num_combinations), options2);
+if t_patch_no_x(end) < tspan(end)
+    % Update initial conditions based on the last state
+    initialConditions = local_dens_no_x(end, :)';
+
+    % Solve again starting from the last time point
+    [t_temp, y_temp] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), [t_patch_no_x(end) tspan(end)./10], initialConditions, options2);
+    % Concatenate the results
+    t_patch_no_x = [t_patch_no_x; t_temp(2:end)];  % Avoid duplicating the common time point
+    local_dens_no_x = [local_dens_no_x; y_temp(2:end, :)];
+end
+[t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_m,1,num_combinations), options);
+[t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_y,1,num_combinations), options);
 [t_patch,local_dens] = ode45(@(t,y)vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init, 1, num_combinations), options);
 
 num_timepoints_no_x = length(t_patch_no_x);
@@ -84,13 +94,13 @@ local_dens_3d = reshape(local_dens(end,:),[],num_combinations);
 
 e_x0 = e_xmin;e_y0 = e_ymin;
 e_xy = e_xmin.*((K_x./(local_dens_no_m_3d(1,:))).^z_x); e_yx = e_ymin.*((K_y./(local_dens_no_m_3d(2,:))).^z_y);
-e_xm = e_xmin.*((K_x./(local_dens_no_y_3d(1,:))).^z_x); e_ym = e_ymin;
+e_xm = e_xmin.*((K_x./(local_dens_no_y_3d(1,:))).^z_x); e_ym = e_ymin.*((K_y./(local_dens_no_x_3d(2,:))).^z_y);
 e_xym = e_xmin.*(K_x./(local_dens_3d(1,:))).^z_x; e_yxm = e_ymin.*(K_y./(local_dens_3d(2,:))).^z_y;
 e_mx = e_mmin.*(K_x./(local_dens_no_y_3d(3,:))).^z_m; e_mxy = e_mmin.*(K_x./(local_dens_3d(3,:))).^z_m; %assume max population size of mutualist is similar to that of x and y
     
 %mu = e_mx - e_x;
 
-tspan_meta = [0,5000];
+tspan_meta = [0,1000];
 
 % c_x = (k_x.*del_x)..*local_dens_no_m_3d(1,:);
 % c_y = k_y.*del_y..*local_dens_3d(2,:);
@@ -117,10 +127,10 @@ c_mxy = k_m.*Del_col'.*local_dens_3d(3,:);%all species present
 
 %lambda = c_mx-c_x;
 %%
-
+frac_occup_init = [0.1,0.1,0.1];
 %options2 = odeset('NonNegative',[1,2,3]);
-[t_syst, frac_occup] = ode15s(@(t,y)vectorized_BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
-    e_mx, e_mxy, num_combinations), tspan_meta, repelem([0.1,0.1,0.1],num_combinations));
+[t_syst, frac_occup] = ode45(@(t,y)vectorized_BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
+    e_mx, e_mxy, num_combinations), tspan_meta, repelem(frac_occup_init,num_combinations));
 
 
 num_tpts_t_syst = length(t_syst); frac_occup_3d = reshape(frac_occup(end,:), [],num_combinations);
