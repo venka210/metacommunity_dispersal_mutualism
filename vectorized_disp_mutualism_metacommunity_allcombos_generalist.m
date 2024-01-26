@@ -51,19 +51,20 @@ f = 0.45; % f is the fraction of diet consumed by frugivore that consists of 'x'
 
 %% Local patch dynamics
 thresholdValue = 10^-4;
-options = odeset('Events',@nonNegativeEvent); options2 =  odeset('Events',@(t, y) eventFunction(t, y, thresholdValue));
+options = odeset('Events',@nonNegativeEvent); %options2 =  odeset('Events',@(t, y) eventFunction(t, y, thresholdValue));
 % [t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations), tspan./10, repmat(spp_init_no_m,1,num_combinations));
 % [t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations), tspan./10, repmat(spp_init_no_y,1,num_combinations));
 % [t_patch,local_dens] = ode45(@(t,y)vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations), tspan, repmat(spp_init, 1, num_combinations), options);
 
 % in case the frugivore is a generalist
-[t_patch_no_x,local_dens_no_x] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_x,1,num_combinations), options2);
+[t_patch_no_x,local_dens_no_x] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_x,1,num_combinations), options);
+%% 
 if t_patch_no_x(end) < tspan(end)
     % Update initial conditions based on the last state
     initialConditions = local_dens_no_x(end, :)';
 
     % Solve again starting from the last time point
-    [t_temp, y_temp] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), [t_patch_no_x(end) tspan(end)./10], initialConditions, options2);
+    [t_temp, y_temp] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), [t_patch_no_x(end) tspan(end)./10], initialConditions, options);
     % Concatenate the results
     t_patch_no_x = [t_patch_no_x; t_temp(2:end)];  % Avoid duplicating the common time point
     local_dens_no_x = [local_dens_no_x; y_temp(2:end, :)];
@@ -81,9 +82,6 @@ local_dens_no_x_3d = reshape(local_dens_no_x(end,:),[],num_combinations);
 local_dens_no_m_3d = reshape(local_dens_no_m(end,:),[],num_combinations);
 local_dens_no_y_3d = reshape(local_dens_no_y(end,:),[],num_combinations);
 local_dens_3d = reshape(local_dens(end,:),[],num_combinations);
-
-
-
 
 %      figure()
 %      plot(t_patch,local_dens)

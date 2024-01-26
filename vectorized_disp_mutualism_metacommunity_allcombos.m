@@ -1,6 +1,6 @@
 %%%%%%%% This code vectorizes the ODEs that need to be solved for multiple
 %%%%%%%% varying parameters (here 'q' and 'del_m')
-clear vars
+clear all
 %% parameter definitions
 r_x = 5; r_y = 5;
 
@@ -26,7 +26,7 @@ z_x = 0.7; z_y = 0.7; z_m = 0.4; %scaling factors for patch extinction rates. ch
 
 e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.03; e_mxmin = e_xmin; 
 
-tspan = [0,1000];
+tspan = [0,100];
 
 k_x = 0.08; k_y = 0.08; k_m = 0.08; %
 
@@ -50,17 +50,28 @@ f = 1.0; % f is the fraction of diet consumed by frugivore that consists of 'x'.
 % lambda_collector = zeros(size(del_m,1),1);
 
 %% Local patch dynamics
-
-options = odeset('Events',@nonNegativeEvent);
+threshold = 10^-6;
+options = odeset('NonNegative',[1,2,3],'Events',@nonNegativeEvent);
 % [t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations), tspan./10, repmat(spp_init_no_m,1,num_combinations));
 % [t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations), tspan./10, repmat(spp_init_no_y,1,num_combinations));
 % [t_patch,local_dens] = ode45(@(t,y)vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations), tspan, repmat(spp_init, 1, num_combinations), options);
 
 % in case the frugivore is a generalist
-[t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_m,1,num_combinations));
-[t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan./10, repmat(spp_init_no_y,1,num_combinations));
-[t_patch,local_dens] = ode45(@(t,y)vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init, 1, num_combinations), options);
+[t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init_no_m,1,num_combinations));
+[t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init_no_y,1,num_combinations));
 
+
+[t_patch,local_dens,te,ye] = ode45(@(t,y)vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init, 1, num_combinations), options);
+while t_patch(end) < tspan(end)
+    % Update initial conditions based on the last state
+    ye(abs(ye(3:3:end)) <= threshold) = 0
+    initialConditions = ye'
+    % Solve again starting from the last time point
+    [t_temp,y_temp,te_temp,ye_temp] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), [t_patch(end) tspan(end)], initialConditions, options);
+    % Concatenate the results
+    t_patch = [t_patch; t_temp(2:end)];  % Avoid duplicating the common time point
+    local_dens = [local_dens; y_temp(2:end, :)];
+end
 
 num_timepoints_no_m = length(t_patch_no_m);
 num_timepoints_no_y = length(t_patch_no_y);
