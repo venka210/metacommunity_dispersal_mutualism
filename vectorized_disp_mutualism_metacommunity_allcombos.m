@@ -11,9 +11,9 @@ K_x = 200; K_y = 200; %no point touching this
 del_x = 0.01; del_y = 0.05;
 %q = 0.45;
 d_m = 0.01; a = 1;%reducing 'a' reduces dispersal rates where px > py
-del_m = 2:1:45; %I'm only not starting from zero because the computational costs are absurd
+del_m = 30:1:90; %I'm only not starting from zero because the computational costs are absurd
 %a = 0.51:0.01:0.81;%0.7-1.1 seems to work for this fig.
-q = 0.50:0.01:1.0;
+q = 0.94:0.01:1.00;
 [Del,Q] = meshgrid(del_m,q);
 
 Del_col = Del(:); Q_col = Q(:); 
@@ -148,6 +148,9 @@ num_tpts_t_syst = length(t_syst); frac_occup_3d = reshape(frac_occup(end,:), [],
 % gamma(i,1) = (0.5..*((lambda.*(1+(e_m../c_m))+c_x)-(e_x+mu)))../(c_x+lambda);%0.5.*(1-((mu-e_x-e_m)./(c_x+c_m)));
 % eta2(i,:) = 4.*(e_m../c_m).*((mu-lambda)../(c_x+lambda));
 %save ("vectorized_q_del_m_varied.mat")
+%save(strcat(['occupancy_qlow_' num2str(q(1)*100, '%d') '_qhi_' num2str(q(end)*100, '%d') '_delmlo_' num2str(del_m(1), '%d') '_delmhi_' num2str(del_m(end), '%d')]), Del,Q,frac_occup_3d,q,del_m, '-mat');
+save (sprintf('occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end)),'Del','Q','frac_occup_3d','q','del_m');
+% save(filename,Del,Q,frac_occup_3d,q,del_m)
 %% surface plot
 figure()
 surf(Del, Q, reshape(frac_occup_3d(1,:),numel(q),numel(del_m)))
