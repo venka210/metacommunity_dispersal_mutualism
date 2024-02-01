@@ -8,11 +8,15 @@ end
 
 q_local = unique([matData(1).q,matData(2).q,matData(3).q,matData(4).q]);
 del_m_local = unique([matData(1).del_m,matData(2).del_m,matData(3).del_m,matData(4).del_m]);
-%frac_occupied_master = matData.frac_occup_3d;
-[Del_master, Q_master] = meshgrid(del_m_local,q_local);
-arrays = {'array1', 'array2','array3', 'array4';...
-    matData(1).frac_occup_3d, matData(2).frac_occup_3d, matData(3).frac_occup_3d,  matData(4).frac_occup_3d};
 
+%frac_occupied_master = matData.frac_occup_3d;
+
+arrays = {'array1', 'array2','array3', 'array4';...
+    matData(1).frac_occup_3d, matData(2).frac_occup_3d, matData(3).frac_occup_3d,  matData(4).frac_occup_3d;...
+    matData(1).q, matData(2).q, matData(3).q,  matData(4).q;...
+    matData(1).del_m, matData(2).del_m, matData(3).del_m,  matData(4).del_m};
+[Del_master, Q_master] = meshgrid(horzcat(arrays{4,:}),horzcat(arrays{3,:}));
+%aa1 = horzcat(arrays{2,:}); aa1 = horzcat(arrays{2,:});
 % Find the array with the maximum size using the max function
 %[~, idx_row] = max(cellfun(@(x) size(x,1), arrays(:, 2)));
 [~, idx_col] = max(cellfun(@(x) size(x,2), arrays(:, 2)));
@@ -33,11 +37,18 @@ max_cols_array_size = size(max_cols_array_name,2);
 
 %%
 figure()
-surf(Del_master,Q_master, reshape(frac_occupied_master(1,:),numel(q_local),numel(del_m_local)))
-colormap parula; freezeColors;
-hold on
-surf(Del_master,Q_master, reshape(frac_occupied_master(2,:),numel(q_local),numel(del_m_local)))
-colormap winter; freezeColors;
+for ii = 1:4
+    [row_temp,col_temp] =  meshgrid(matData(ii).del_m,matData(ii).q)
+    hold on
+    toplot_x = matData(ii).frac_occup_3d;
+    surf(row_temp,col_temp,reshape(toplot_x(1,:),size(row_temp,1),[]))
+    %surf(arrays,Q_master, reshape(aa,size(Del_master,1),size(Q_master,2)));
+    %surf(Del_master,Q_master, reshape(frac_occupied_master(1,:),numel(q_local),numel(del_m_local)))
+    colormap parula; freezeColors;
+    %hold on
+    %surf(Del_master,Q_master, reshape(frac_occupied_master(2,:),numel(q_local),numel(del_m_local)))
+    %colormap winter; freezeColors;
+end
 %surf(Del, Q,occupancy_del_m(:,:,1))
 xlabel('mutualist dispersal rate (\delta_m)')
 ylabel ('consumption fraction (q)')
