@@ -10,25 +10,25 @@ K_x = 200; K_y = 200; %no point touching this
 
 del_x = 0.01; del_y = 0.05;
 %q = 0.45;
-d_m = 0.01; a = 1;%reducing 'a' reduces dispersal rates where px > py
-del_m = 30:1:90; %I'm only not starting from zero because the computational costs are absurd
+d_m = 0.01; a = 0.8;%reducing 'a' reduces dispersal rates where px > py
+del_m = 3:1:53; %I'm only not starting from zero because the computational costs are absurd
 %a = 0.51:0.01:0.81;%0.7-1.1 seems to work for this fig.
-q = 0.94:0.01:1.00;
+q = 0.75:0.01:0.90;
 [Del,Q] = meshgrid(del_m,q);
 
 Del_col = Del(:); Q_col = Q(:); 
 
 num_combinations = numel(Q_col); 
 
-k_eff = 0.1; %efficiency of dispersing seeds to habitable patches
+k_eff = 1.0; %efficiency of dispersing seeds to habitable patches
 
 z_x = 0.7; z_y = 0.7; z_m = 0.4; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
 
-e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.2; e_mxmin = e_xmin; 
+e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.3; e_mxmin = e_xmin; 
 
 tspan = [0,1000];
 
-k_x = 0.08; k_y = 0.08; k_m = 0.08; %
+k_x = 0.08; k_y = 0.08; k_m = 0.10; %
 
 x_init = 0.1; y_init = 0.1; m_init = 0.1;
 
@@ -99,7 +99,7 @@ e_x0 = e_xmin;e_y0 = e_ymin;
 e_xy = e_xmin.*((K_x./(local_dens_no_m_3d(1,:))).^z_x); e_yx = e_ymin.*((K_y./(local_dens_no_m_3d(2,:))).^z_y);
 e_xm = e_xmin.*((K_x./(local_dens_no_y_3d(1,:))).^z_x); e_ym = e_ymin;
 e_xym = e_xmin.*(K_x./(local_dens_3d(1,:))).^z_x; e_yxm = e_ymin.*(K_y./(local_dens_3d(2,:))).^z_y;
-e_mx = e_mmin.*(K_x./(local_dens_no_y_3d(3,:))).^z_m; e_mxy = e_mmin.*(K_x./(local_dens_3d(3,:))).^z_m; %assume max population size of mutualist is similar to that of x and y
+e_mx = e_mmin.*(K_x./(local_dens_no_y_3d(3,:))).^z_m; e_my = 0; e_mxy = e_mmin.*(K_x./(local_dens_3d(3,:))).^z_m; %assume max population size of mutualist is similar to that of x and y
     
 %mu = e_mx - e_x;
 
@@ -113,7 +113,7 @@ tspan_meta = [0,1000];
 %c_x0 = (k_x.*del_x).*K_x; c_y0 = (k_y.*del_y).*K_y; %patches with only one species
 c_x0 = (k_x.*del_x).*K_x*(1-(del_x/r_x));
 c_y0 = (k_y.*del_y).*K_y*(1-(del_y/r_y)); 
-c_xy = (k_x.*del_x).*local_dens_no_m_3d(1,:); c_yx = (k_y.*del_y).*local_dens_no_m_3d(2,:); c_mx = k_m.*Del_col'.*local_dens_no_y_3d(3,:);%patches with 2 species
+c_xy = (k_x.*del_x).*local_dens_no_m_3d(1,:); c_yx = (k_y.*del_y).*local_dens_no_m_3d(2,:); c_mx = k_m.*Del_col'.*local_dens_no_y_3d(3,:); c_my = 0;%patches with 2 species
 c_xm = ((k_x.*del_x)+k_m*k_eff.*Del_col'.*local_dens_no_y_3d(3,:)).*local_dens_no_y_3d(1,:);%k_x.*del_x.*local_dens_no_y_3d(1,:); 
 c_ym = (k_y.*del_y).*K_y*(1-(del_y/r_y));%(k_y.*del_y).*K_y; % patches with one plant-one frugivore
 c_xym = (k_x.*del_x+k_m.*k_eff.*f.*Del_col'.*local_dens_3d(3,:)).*local_dens_3d(1,:); c_yxm = k_y.*del_y.*local_dens_3d(2,:); c_mxy = k_m.*Del_col'.*local_dens_3d(3,:);%all species present
@@ -130,8 +130,8 @@ if any(e_mxy == inf) || any(e_mx ==inf)
     IC_betweenpatch(3,find(e_mxy == inf)) = 0;
 end
 
-[t_syst, frac_occup] = ode45(@(t,y)vectorized_BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
-    e_mx, e_mxy, num_combinations), tspan_meta, IC_betweenpatch(:), options2);
+[t_syst, frac_occup] = ode45(@(t,y)vectorized_BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, c_my, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
+    e_mx, e_mxy, e_my, num_combinations), tspan_meta, IC_betweenpatch(:), options2);
 
 
 num_tpts_t_syst = length(t_syst); frac_occup_3d = reshape(frac_occup(end,:), [],num_combinations);
@@ -149,7 +149,9 @@ num_tpts_t_syst = length(t_syst); frac_occup_3d = reshape(frac_occup(end,:), [],
 % eta2(i,:) = 4.*(e_m../c_m).*((mu-lambda)../(c_x+lambda));
 %save ("vectorized_q_del_m_varied.mat")
 %save(strcat(['occupancy_qlow_' num2str(q(1)*100, '%d') '_qhi_' num2str(q(end)*100, '%d') '_delmlo_' num2str(del_m(1), '%d') '_delmhi_' num2str(del_m(end), '%d')]), Del,Q,frac_occup_3d,q,del_m, '-mat');
-save (sprintf('occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end)),'Del','Q','frac_occup_3d','q','del_m');
+
+%save (sprintf('occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end)),'Del','Q','frac_occup_3d','q','del_m');
+
 % save(filename,Del,Q,frac_occup_3d,q,del_m)
 %% surface plot
 figure()
@@ -157,6 +159,7 @@ surf(Del, Q, reshape(frac_occup_3d(1,:),numel(q),numel(del_m)))
 colormap parula; freezeColors;
 hold on
 surf(Del, Q, reshape(frac_occup_3d(2,:),numel(q),numel(del_m)))
+surf(Del, Q, reshape(frac_occup_3d(3,:),numel(q),numel(del_m)))
 colormap winter; freezeColors;
 %surf(Del, Q,occupancy_del_m(:,:,1))
 xlabel('mutualist dispersal rate (\delta_m)')

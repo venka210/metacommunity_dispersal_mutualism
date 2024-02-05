@@ -127,8 +127,8 @@ c_mxy = k_m.*Del_col'.*local_dens_3d(3,:);%all species present
 %%
 frac_occup_init = [0.1,0.1,0.1];
 %options2 = odeset('NonNegative',[1,2,3]);
-[t_syst, frac_occup] = ode45(@(t,y)vectorized_BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
-    e_mx, e_mxy, num_combinations), tspan_meta, repelem(frac_occup_init,num_combinations));
+[t_syst, frac_occup] = ode45(@(t,y)vectorized_BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, c_my, e_x0, e_xy, e_xm, e_xym, e_y0,...
+    e_yx, e_ym, e_yxm, e_mx, e_mxy, num_combinations), tspan_meta, repelem(frac_occup_init,num_combinations));
 
 
 num_tpts_t_syst = length(t_syst); frac_occup_3d = reshape(frac_occup(end,:), [],num_combinations);
