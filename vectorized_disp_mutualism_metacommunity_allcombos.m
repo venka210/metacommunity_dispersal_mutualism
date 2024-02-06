@@ -13,7 +13,7 @@ del_x = 0.01; del_y = 0.05;
 d_m = 0.01; a = 0.8;%reducing 'a' reduces dispersal rates where px > py
 del_m = 3:1:53; %I'm only not starting from zero because the computational costs are absurd
 %a = 0.51:0.01:0.81;%0.7-1.1 seems to work for this fig.
-q = 0.75:0.01:0.90;
+q = 0.73:0.01:0.80;
 [Del,Q] = meshgrid(del_m,q);
 
 Del_col = Del(:); Q_col = Q(:); 
@@ -56,11 +56,9 @@ options = odeset('NonNegative',[1,2,3]);%,'Events',@nonNegativeEvent);
 % [t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations), tspan./10, repmat(spp_init_no_y,1,num_combinations));
 % [t_patch,local_dens] = ode45(@(t,y)vectorized_LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations), tspan, repmat(spp_init, 1, num_combinations), options);
 
-% in case the frugivore is a generalist
+% in case the frugivore is a generalist (or specialist if f=1)
 [t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init_no_m,1,num_combinations),options);
 [t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init_no_y,1,num_combinations), options);
-
-
 [t_patch,local_dens] = ode45(@(t,y)vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init, 1, num_combinations), options);
 % while t_patch(end) < tspan(end)
 %     % Update initial conditions based on the last state
@@ -150,7 +148,7 @@ num_tpts_t_syst = length(t_syst); frac_occup_3d = reshape(frac_occup(end,:), [],
 %save ("vectorized_q_del_m_varied.mat")
 %save(strcat(['occupancy_qlow_' num2str(q(1)*100, '%d') '_qhi_' num2str(q(end)*100, '%d') '_delmlo_' num2str(del_m(1), '%d') '_delmhi_' num2str(del_m(end), '%d')]), Del,Q,frac_occup_3d,q,del_m, '-mat');
 
-%save (sprintf('occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end)),'Del','Q','frac_occup_3d','q','del_m');
+save (sprintf('occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end)),'Del','Q','frac_occup_3d','q','del_m');
 
 % save(filename,Del,Q,frac_occup_3d,q,del_m)
 %% surface plot
@@ -170,4 +168,4 @@ zlabel('fraction of patches occupied')
 title('Fraction of patches occupied vs mutualist dispersal rate and predation rate')
 legend('Species with mutualist (x)')%, 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
 %fig1name = sprintf('occupancy_vs_del_m.jpeg');
-print('vectorized_occupancy_q_3d_vs_del_m','-djpeg','-r600')
+print('specialist_occup_q_vs_del_m','-djpeg','-r600')
