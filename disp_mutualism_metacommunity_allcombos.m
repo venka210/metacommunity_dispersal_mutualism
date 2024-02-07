@@ -1,4 +1,4 @@
-clear vars
+clear all
 
 %% parameter definition
 r_x = 5; r_y = 5;
@@ -55,7 +55,7 @@ for i = 1:length(del_m)
     e_xy = e_xmin*((K_x/(local_dens_no_m(end,1)))^z_x); e_yx = e_ymin*((K_y/(local_dens_no_m(end,2)))^z_y);
     e_xm = e_xmin*((K_x/(local_dens_no_y(end,1)))^z_x); e_ym = e_ymin;
     e_xym = e_xmin*(K_x/(local_dens(end,1)))^z_x; e_yxm = e_ymin*(K_y/(local_dens(end,2)))^z_y;
-    e_mx = e_mmin*(K_x/(local_dens_no_y(end,3)))^z_m; e_mxy = e_mmin*(K_x/(local_dens(end,3)))^z_m; %assume max population size of mutualist is similar to that of x and y
+    e_mx = e_mmin*(K_x/(local_dens_no_y(end,3)))^z_m; e_my = 0; e_mxy = e_mmin*(K_x/(local_dens(end,3)))^z_m; %assume max population size of mutualist is similar to that of x and y
     
 %     if local_dens(end,3) == 0
 %         e_mx = 0;
@@ -72,9 +72,9 @@ for i = 1:length(del_m)
 
     tspan_meta = [0, 1000];
 
-    c_x0 = (k_x*del_x)*K_x; c_y0 = (k_y*del_y)*K_y; %patches with only one species
+    c_x0 = (k_x*del_x)*K_x*(1-(del_x/r_x)); c_y0 = (k_y*del_y)*K_y*(1-(del_y/r_y)); %patches with only one species
     c_xy = (k_x*del_x)*local_dens_no_m(end,1); c_yx = (k_y*del_y)*local_dens_no_m(end,2); c_mx = k_m*del_m(i)*local_dens_no_y(end,3);%patches with 2 species
-    c_xm = k_x*del_x*local_dens_no_y(end,1); c_ym = (k_y*del_y)*K_y; % patches with one plant-one frugivore
+    c_xm = ((k_x*del_x)+k_m*k_eff.*del_y.*local_dens_no_y(end,3))*local_dens_no_y(end,1); c_ym = c_y0; % patches with one plant-one frugivore
     c_xym =(k_x*del_x+k_m*k_eff*a*(1-q)*del_m(i)*local_dens(end,3))*local_dens(end,1); c_yxm = k_y*del_y*local_dens(end,2); c_mxy = k_m*del_m(i)*local_dens(end,3);%all species present
 
     %lambda = c_mx-c_x;
@@ -84,8 +84,8 @@ for i = 1:length(del_m)
         frac_occup_init(3,1) = 0;
     end
 
-    [t_syst, frac_occup] = ode45(@(t,y)BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
-    e_mx, e_mxy), tspan_meta,frac_occup_init,options2);
+    [t_syst, frac_occup] = ode45(@(t,y)BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, c_my, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
+    e_mx, e_mxy, e_my), tspan_meta,frac_occup_init,options2);
     %frac_occup(end,1) = 0;
     
     

@@ -114,7 +114,7 @@ c_y0 = (k_y.*del_y).*K_y*(1-(del_y/r_y));
 c_xy = (k_x.*del_x).*local_dens_no_m_3d(1,:); c_yx = (k_y.*del_y).*local_dens_no_m_3d(2,:); c_mx = k_m.*Del_col'.*local_dens_no_y_3d(3,:); c_my = 0;%patches with 2 species
 c_xm = ((k_x.*del_x)+k_m*k_eff.*Del_col'.*local_dens_no_y_3d(3,:)).*local_dens_no_y_3d(1,:);%k_x.*del_x.*local_dens_no_y_3d(1,:); 
 c_ym = (k_y.*del_y).*K_y*(1-(del_y/r_y));%(k_y.*del_y).*K_y; % patches with one plant-one frugivore
-c_xym = (k_x.*del_x+k_m.*k_eff.*f.*Del_col'.*local_dens_3d(3,:)).*local_dens_3d(1,:); c_yxm = k_y.*del_y.*local_dens_3d(2,:); c_mxy = k_m.*Del_col'.*local_dens_3d(3,:);%all species present
+c_xym = (k_x.*del_x+k_m.*k_eff.*Del_col'.*local_dens_3d(3,:)).*local_dens_3d(1,:); c_yxm = k_y.*del_y.*local_dens_3d(2,:); c_mxy = k_m.*Del_col'.*local_dens_3d(3,:);%all species present
 
 
 %lambda = c_mx-c_x;
