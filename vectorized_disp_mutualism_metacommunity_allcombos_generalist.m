@@ -2,43 +2,60 @@
 %%%%%%%% varying parameters (here 'q' and 'del_m')
 clear vars
 %% parameter definitions
+
 r_x = 5; r_y = 5;
 
-alpha_xy = 0.73; alpha_yx = 0.60; %really only affects y's local density and dispersal
+alpha_xy = 0.73; alpha_yx = 0.60; %really only affects y's local density and dispersal -- alpha_xy = 0.73; alpha_yx = 0.60;
 
 K_x = 200; K_y = 200; %no point touching this
 
-del_x = 0.01; del_y = 0.05;
+del_x = 0.01; del_y = 0.03; %del_m = 0:0.1:4; %I'm only not starting from zero because the computational costs are absurd
+
+%a = 1; q = 1; d_m = 1; %
+
+k_eff = 0.1; %efficiency of dispersing seeds to habitable patches
+
+z_x = 0.8; z_y = 0.8; z_m = 0.5; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
+
+e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.05; e_mxmin = e_xmin;
+
+tspan = [0,500];
+
+k_x = 0.1; k_y = 0.1; k_m = 0.05;
+
+%x_init = 0.1; y_init = 0.1; m_init = 0.1;
+
+%del_x = 0.01; del_y = 0.05;
 
 %q = 0.45;
 d_m = 1; a = 1.0;%reducing 'a' reduces dispersal rates where px > py
-del_m = 4:1:25; %I'm only not starting from zero because the computational costs are absurd
+del_m = 0:0.1:6; %I'm only not starting from zero because the computational costs are absurd
 %a = 0.51:0.01:0.81;%0.7-1.1 seems to work for this fig.
-q = 0.4:0.05:0.6;
+q = 0.92:0.02:1.0;
 [Del,Q] = meshgrid(del_m,q);
 
 Del_col = Del(:); Q_col = Q(:); 
 
 num_combinations = numel(Q_col); 
 
-k_eff = 1; %efficiency of dispersing seeds to habitable patches
+%k_eff = 1; %efficiency of dispersing seeds to habitable patches
 
-z_x = 0.7; z_y = 0.7; z_m = 0.5; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
+%z_x = 0.7; z_y = 0.7; z_m = 0.5; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
 
-e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.03; e_mxmin = e_xmin; 
+%e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.03; e_mxmin = e_xmin; 
 
-tspan = [0,1000];
+%tspan = [0,1000];
 
-k_x = 0.08; k_y = 0.08; k_m = 0.02; %
+%k_x = 0.08; k_y = 0.08; k_m = 0.02; %
 
-x_init = 0.1; y_init = 0.1; m_init = 0.1;
+x_init = 0.01; y_init = 0.01; m_init = 0.01;
 
 spp_init_no_m = [x_init; y_init; 0];
 spp_init_no_y = [x_init; 0; m_init];
 spp_init_no_x = [0; y_init; m_init];
 spp_init = [x_init; y_init; m_init];
 
-f = 1; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
+f = 0.05; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
 %variable collectors across parameter sweeps
 
 % occupancy_del_m = zeros(size(del_m,1),3);
@@ -60,16 +77,6 @@ options = odeset('NonNegative',[1,2,3]);
 
 % in case the frugivore is a generalist
 [t_patch_no_x,local_dens_no_x] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init_no_x,1,num_combinations), options);
-% if t_patch_no_x(end) < tspan(end)
-%     % Update initial conditions based on the last state
-%     initialConditions = local_dens_no_x(end, :)';
-% 
-%     % Solve again starting from the last time point
-%     [t_temp, y_temp] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), [t_patch_no_x(end) tspan(end)./10], initialConditions, options);
-%     % Concatenate the results
-%     t_patch_no_x = [t_patch_no_x; t_temp(2:end)];  % Avoid duplicating the common time point
-%     local_dens_no_x = [local_dens_no_x; y_temp(2:end, :)];
-% end
 [t_patch_no_m,local_dens_no_m] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init_no_m,1,num_combinations), options);
 [t_patch_no_y,local_dens_no_y] = ode45(@(t,y) vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, Del_col', a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init_no_y,1,num_combinations), options);
 [t_patch,local_dens] = ode45(@(t,y)vectorized_LocalSpeciesInteraction_generalist(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y,Del_col',a, Q_col', d_m, num_combinations, f), tspan, repmat(spp_init, 1, num_combinations), options);
@@ -119,15 +126,22 @@ c_y0 = (k_y.*del_y).*K_y*(1-(del_y/r_y));
 
 %patches with 2 species
 c_xy = (k_x.*del_x).*local_dens_no_m_3d(1,:); 
+c_xm = (k_x*del_x).*local_dens_no_y_3d(1,:)+k_m*k_eff.*Del_col'.*local_dens_no_y_3d(3,:).*(K_x - local_dens_no_y_3d(1,:));
+
 c_yx =(k_y.*del_y).*local_dens_no_m_3d(2,:);
-c_mx = k_m.*Del_col'.*local_dens_no_y_3d(3,:);
-c_xm = ((k_x.*del_x)+k_m*k_eff.*Del_col'.*local_dens_no_y_3d(3,:)).*local_dens_no_y_3d(1,:);
-c_ym = ((k_y.*del_y)+k_m*k_eff.*Del_col'.*local_dens_no_x_3d(3,:)).*local_dens_no_x_3d(2,:); % patches with one plant-one frugivore
+c_ym = (k_y*del_y).*local_dens_no_x_3d(2,:)+k_m*k_eff.*Del_col'.*local_dens_no_x_3d(3,:).*(K_y - local_dens_no_x_3d(2,:)); 
+
+c_mx = k_m.*Del_col'.*local_dens_no_y_3d(3,:); 
 c_my = k_m.*Del_col'.*local_dens_no_x_3d(3,:);
 
+%c_xm = ((k_x.*del_x)+k_m*k_eff.*Del_col'.*local_dens_no_y_3d(3,:)).*local_dens_no_y_3d(1,:);
+%c_ym = ((k_y.*del_y)+k_m*k_eff.*Del_col'.*local_dens_no_x_3d(3,:)).*local_dens_no_x_3d(2,:); % patches with one plant-one frugivore
+
 %all species present
-c_xym = (k_x.*del_x+k_m.*k_eff.*Del_col'.*local_dens_3d(3,:)).*local_dens_3d(1,:); 
-c_yxm = (k_y.*del_y+k_m.*k_eff.*Del_col'.*local_dens_3d(3,:)).*local_dens_3d(2,:);
+c_xym = k_x*del_x.*local_dens_3d(1,:)+k_m*k_eff.*Del_col'.*local_dens_3d(3,:).*(K_x - local_dens_3d(1,:));
+c_yxm = k_y*del_y*local_dens_3d(2,:)+k_m*k_eff.*Del_col'.*local_dens_3d(3,:).*(K_y - local_dens_3d(2,:));
+%c_xym = (k_x.*del_x+k_m.*k_eff.*Del_col'.*local_dens_3d(3,:)).*local_dens_3d(1,:); 
+%c_yxm = (k_y.*del_y+k_m.*k_eff.*Del_col'.*local_dens_3d(3,:)).*local_dens_3d(2,:);
 c_mxy = k_m.*Del_col'.*local_dens_3d(3,:);%all species present
 
 
@@ -137,10 +151,14 @@ frac_occup_init = [0.1,0.1,0.1];
 IC_betweenpatch = repelem(frac_occup_init,num_combinations);
 IC_betweenpatch = reshape(IC_betweenpatch,[],num_combinations);
 options2 = odeset('NonNegative',[1,2,3]);
-if any(e_mxy == inf) || any(e_mx ==inf) || any(e_my == inf)
-    c_mx(find((e_mx == inf))) = 0; e_mx(find((e_mx == inf))) = 0; 
-    c_my(find((e_my == inf))) = 0; e_my(find((e_my == inf))) = 0; 
-    c_mxy(find((e_mxy == inf))) = 0; e_mxy(find((e_mxy == inf))) = 0; 
+if any(e_mxy > 10^4) || any(e_mx > 10^4) || any(e_my > 10^4) || any(e_xym > 10^4) || any(e_yxm > 10^4) 
+    c_mx(find((e_mx > 10^4))) = 0; e_mx(find((e_mx > 10^4))) = 0; 
+    c_my(find((e_my > 10^4))) = 0; e_my(find((e_my > 10^4))) = 0; 
+    c_mxy(find((e_mxy > 10^4))) = 0; e_mxy(find((e_mxy > 10^4))) = 0; 
+    c_xym(find((e_xym > 10^4))) = 0; e_xym(find((e_xym > 10^4))) = 0; 
+    c_yxm(find((e_yxm > 10^4))) = 0; e_yxm(find((e_yxm > 10^4))) = 0;
+    %c_mxy(find((e_mxy == inf))) = 0; e_mxy(find((e_mxy == inf))) = 0; 
+    %c_xym(find((e_xym == inf))) = 0; e_xym(find((e_xym == inf))) = 0; 
     % IC_betweenpatch(3,find(e_mx == inf)) = 0;
     % IC_betweenpatch(3,find(e_my == inf)) = 0;
     % IC_betweenpatch(3,find(e_mxy == inf)) = 0;
@@ -163,16 +181,16 @@ num_tpts_t_syst = length(t_syst); frac_occup_3d = reshape(frac_occup(end,:), [],
 % gamma(i,1) = (0.5..*((lambda.*(1+(e_m../c_m))+c_x)-(e_x+mu)))../(c_x+lambda);%0.5.*(1-((mu-e_x-e_m)./(c_x+c_m)));
 % eta2(i,:) = 4.*(e_m../c_m).*((mu-lambda)../(c_x+lambda));
 %save ("vectorized_q_del_m_varied.mat")
-%save (sprintf('generalist_occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end)),'Del','Q','frac_occup_3d','q','del_m');
+save (sprintf('generalist_occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end)),'Del','Q','frac_occup_3d','q','del_m');
 
 
 %% surface plot
 figure()
-surf(Del, Q, reshape(frac_occup_3d(1,:),numel(q),numel(del_m)))
+surf(Del, Q, reshape(frac_occup_3d(1,:),numel(q),numel(del_m)),'EdgeColor','none')
 colormap parula; freezeColors;
 hold on
-surf(Del, Q, reshape(frac_occup_3d(2,:),numel(q),numel(del_m)))
-surf(Del, Q, reshape(frac_occup_3d(3,:),numel(q),numel(del_m)))
+surf(Del, Q, reshape(frac_occup_3d(2,:),numel(q),numel(del_m)),'EdgeColor','none')
+surf(Del, Q, reshape(frac_occup_3d(3,:),numel(q),numel(del_m)),'EdgeColor','none')
 colormap winter; freezeColors;
 %surf(Del, Q,occupancy_del_m(:,:,1))
 xlabel('mutualist dispersal rate (\delta_m)')
@@ -183,4 +201,4 @@ zlabel('fraction of patches occupied')
 title('Fraction of patches occupied vs mutualist dispersal rate and predation rate')
 legend('Species with mutualist (x)')%, 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
 %fig1name = sprintf('occupancy_vs_del_m.jpeg');
-print('generalist_vector_occup_q_vs_del_m','-djpeg','-r600')
+%print('generalist_vector_occup_q_vs_del_m','-djpeg','-r600')

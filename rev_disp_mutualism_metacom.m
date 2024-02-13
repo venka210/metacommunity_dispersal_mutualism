@@ -7,10 +7,10 @@ alpha_xy = 0.73; alpha_yx = 0.60; %really only affects y's local density and dis
 
 K_x = 200; K_y = 200; %no point touching this
 
-del_x = 0.01; del_y = 0.05; del_m = 0:1:15; %I'm only not starting from zero because the computational costs are absurd
+del_x = 0.01; del_y = 0.03; del_m = 0:0.1:10; %I'm only not starting from zero because the computational costs are absurd
 
 a = 1; q = 1; d_m = 1; %
-k_eff = 1; %efficiency of dispersing seeds to habitable patches
+k_eff = 0.1; %efficiency of dispersing seeds to habitable patches
 
 z_x = 0.8; z_y = 0.8; z_m = 0.5; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
 
@@ -18,7 +18,7 @@ e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.05; e_mxmin = e_xmin;
 
 tspan = [0,500];
 
-k_x = 0.8; k_y = 0.8; k_m = 0.08;
+k_x = 0.1; k_y = 0.1; k_m = 0.05;
 
 x_init = 0.1; y_init = 0.1; m_init = 0.1;
     
@@ -63,7 +63,7 @@ for i = 1:length(del_m)
     c_x0 = (k_x*del_x)*K_x*(1-(del_x/r_x)); c_y0 = (k_y*del_y)*K_y*(1-(del_y/r_y)); %patches with only one species
     c_xy = (k_x*del_x)*local_dens_no_m(end,1); c_yx = (k_y*del_y)*local_dens_no_m(end,2); %patches with 2 species
     c_xm = (k_x*del_x)*local_dens_no_y(end,1)+k_m*k_eff.*del_m(i).*local_dens_no_y(end,3)*(K_x - local_dens_no_y(end,1)); c_ym = c_y0; c_mx = k_m*del_m(i)*local_dens_no_y(end,3);% patches with one plant-one frugivore
-    c_xym = k_x*del_x*local_dens(end,1)+k_m*k_eff*del_m(i)*local_dens(end,3)*(K_x - local_dens(end,1)); c_yxm = k_y*del_y*local_dens(end,2); c_mxy = k_m*del_m(i)*local_dens(end,3);%all species present
+    c_xym = k_x*del_x*local_dens(end,1)+k_m*k_eff*del_m(i)*local_dens(end,3)*(K_x - local_dens(end,1)); c_yxm = k_y*del_y*local_dens(end,2); c_mxy = k_m.*del_m(i)*local_dens(end,3);%all species present
     c_my = 0;
 
     if any(e_mxy == inf) || any(e_mx ==inf)
@@ -94,7 +94,7 @@ ylabel('fraction of patches occupied')
 title('Fraction of patches occupied vs mutualist dispersal rate')
 legend('Species with mutualist (x)', 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
 %fig1name = sprintf('occupancy_vs_del_m.jpeg');
-%print('occupancy_vs_del_m_allc','-djpeg','-r600')
+%print('rev_occupancy_vs_del_m_allc','-djpeg','-r600')
 
 
 
