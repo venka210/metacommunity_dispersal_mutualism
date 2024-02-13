@@ -94,7 +94,7 @@ ylabel('fraction of patches occupied')
 title('Fraction of patches occupied vs mutualist dispersal rate')
 legend('Species with mutualist (x)', 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
 %fig1name = sprintf('occupancy_vs_del_m.jpeg');
-%print('rev_occupancy_vs_del_m_allc','-djpeg','-r600')
+print('rev_occupancy_vs_del_m_allc','-djpeg','-r600')
 
 
 
