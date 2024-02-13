@@ -11,7 +11,7 @@ K_x = 200; K_y = 200; %no point touching this
 
 del_x = 0.01; del_y = 0.03; %del_m = 0:0.1:4; %I'm only not starting from zero because the computational costs are absurd
 
-%a = 1; q = 1; d_m = 1; %
+%a = 1; q = 1; d_m = 1;
 
 k_eff = 0.1; %efficiency of dispersing seeds to habitable patches
 
@@ -29,9 +29,9 @@ k_x = 0.1; k_y = 0.1; k_m = 0.05;
 
 %q = 0.45;
 d_m = 1; a = 1.0;%reducing 'a' reduces dispersal rates where px > py
-del_m = 0:0.1:6; %I'm only not starting from zero because the computational costs are absurd
+del_m = 0:0.1:10; %I'm only not starting from zero because the computational costs are absurd
 %a = 0.51:0.01:0.81;%0.7-1.1 seems to work for this fig.
-q = 0.92:0.02:1.0;
+q = 0.65:0.01:95;
 [Del,Q] = meshgrid(del_m,q);
 
 Del_col = Del(:); Q_col = Q(:); 
@@ -55,7 +55,7 @@ spp_init_no_y = [x_init; 0; m_init];
 spp_init_no_x = [0; y_init; m_init];
 spp_init = [x_init; y_init; m_init];
 
-f = 0.05; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
+f = 0.95; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
 %variable collectors across parameter sweeps
 
 % occupancy_del_m = zeros(size(del_m,1),3);
@@ -157,11 +157,6 @@ if any(e_mxy > 10^4) || any(e_mx > 10^4) || any(e_my > 10^4) || any(e_xym > 10^4
     c_mxy(find((e_mxy > 10^4))) = 0; e_mxy(find((e_mxy > 10^4))) = 0; 
     c_xym(find((e_xym > 10^4))) = 0; e_xym(find((e_xym > 10^4))) = 0; 
     c_yxm(find((e_yxm > 10^4))) = 0; e_yxm(find((e_yxm > 10^4))) = 0;
-    %c_mxy(find((e_mxy == inf))) = 0; e_mxy(find((e_mxy == inf))) = 0; 
-    %c_xym(find((e_xym == inf))) = 0; e_xym(find((e_xym == inf))) = 0; 
-    % IC_betweenpatch(3,find(e_mx == inf)) = 0;
-    % IC_betweenpatch(3,find(e_my == inf)) = 0;
-    % IC_betweenpatch(3,find(e_mxy == inf)) = 0;
 end
 [t_syst, frac_occup] = ode45(@(t,y)vectorized_BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, c_my, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
     e_mx, e_mxy, e_my, num_combinations), tspan_meta, IC_betweenpatch(:), options2);
@@ -181,7 +176,7 @@ num_tpts_t_syst = length(t_syst); frac_occup_3d = reshape(frac_occup(end,:), [],
 % gamma(i,1) = (0.5..*((lambda.*(1+(e_m../c_m))+c_x)-(e_x+mu)))../(c_x+lambda);%0.5.*(1-((mu-e_x-e_m)./(c_x+c_m)));
 % eta2(i,:) = 4.*(e_m../c_m).*((mu-lambda)../(c_x+lambda));
 %save ("vectorized_q_del_m_varied.mat")
-save (sprintf('generalist_occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d_f_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end),f),'Del','Q','frac_occup_3d','q','del_m','f');
+%save (sprintf('generalist_occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d_f_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end),f*100),'Del','Q','frac_occup_3d','q','del_m','f');
 
 
 %% surface plot
@@ -198,7 +193,7 @@ ylabel ('consumption fraction (q)')
 %xlim([1.0 29.0]);
 zlabel('fraction of patches occupied')
 %xline([1.0 2.6, 10.4, 26.9],'--',{'Exploitative (x extinct)','Mutualism (y fitter)','Mutualism (x fitter)', 'Mutualism (y fitter)'})
-title('Fraction of patches occupied vs mutualist dispersal rate and predation rate')
+title(sprintf('Patch occupancy vs mutualist dispersal predation rate; f = %0.1f',f))
 legend('Species with mutualist (x)')%, 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
-%fig1name = sprintf('occupancy_vs_del_m.jpeg');
-%print('generalist_vector_occup_q_vs_del_m','-djpeg','-r600')
+%fig1name = sprintf('generalist_vector_occup_q_vs_del_m_f_%d.jpg',f*100);
+%print(fig1name,'-djpeg','-r600')
