@@ -181,7 +181,7 @@ num_tpts_t_syst = length(t_syst); frac_occup_3d = reshape(frac_occup(end,:), [],
 % gamma(i,1) = (0.5..*((lambda.*(1+(e_m../c_m))+c_x)-(e_x+mu)))../(c_x+lambda);%0.5.*(1-((mu-e_x-e_m)./(c_x+c_m)));
 % eta2(i,:) = 4.*(e_m../c_m).*((mu-lambda)../(c_x+lambda));
 %save ("vectorized_q_del_m_varied.mat")
-save (sprintf('generalist_occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end)),'Del','Q','frac_occup_3d','q','del_m');
+save (sprintf('generalist_occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d_f_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end),f),'Del','Q','frac_occup_3d','q','del_m','f');
 
 
 %% surface plot
