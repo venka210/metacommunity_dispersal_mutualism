@@ -1,6 +1,6 @@
 %%%%%%%% This code vectorizes the ODEs that need to be solved for multiple
 %%%%%%%% varying parameters (here 'q' and 'del_m')
-clear vars
+clear all
 %% parameter definitions
 
 r_x = 5; r_y = 5;
@@ -19,7 +19,7 @@ z_x = 0.8; z_y = 0.8; z_m = 0.5; %scaling factors for patch extinction rates. ch
 
 e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.05; e_mxmin = e_xmin;
 
-tspan = [0,500];
+tspan = [0,200];
 
 k_x = 0.1; k_y = 0.1; k_m = 0.05;
 
@@ -29,9 +29,9 @@ k_x = 0.1; k_y = 0.1; k_m = 0.05;
 
 %q = 0.45;
 d_m = 1; a = 1.0;%reducing 'a' reduces dispersal rates where px > py
-del_m = 0:0.1:10; %I'm only not starting from zero because the computational costs are absurd
-%a = 0.51:0.01:0.81;%0.7-1.1 seems to work for this fig.
-q = 0.65:0.01:95;
+del_m = 0:0.2:10; 
+
+q = 0.80:0.02:0.95;
 [Del,Q] = meshgrid(del_m,q);
 
 Del_col = Del(:); Q_col = Q(:); 
@@ -55,7 +55,7 @@ spp_init_no_y = [x_init; 0; m_init];
 spp_init_no_x = [0; y_init; m_init];
 spp_init = [x_init; y_init; m_init];
 
-f = 0.95; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
+f = 1.0; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
 %variable collectors across parameter sweeps
 
 % occupancy_del_m = zeros(size(del_m,1),3);
