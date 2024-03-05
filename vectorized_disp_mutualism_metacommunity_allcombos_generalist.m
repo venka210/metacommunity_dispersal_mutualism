@@ -29,15 +29,23 @@ k_x = 0.1; k_y = 0.1; k_m = 0.05;
 
 %q = 0.45;
 d_m = 1; a = 1.0;%reducing 'a' reduces dispersal rates where px > py
-del_m = 0:0.2:10; 
 
-q = 0.80:0.02:0.95;
+del_m_all = 0:0.5:12; 
+
+q_all = 0.0:0.02:1.0;
+
+f = 1.0; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
+
+Del_and_Q = parameterRangeCheck([min(del_m_all);max(del_m_all)],[min(q_all);max(q_all)],f);
+
+del_m = unique(Del_and_Q(1,:)); q = unique(Del_and_Q(2,:));
+
 [Del,Q] = meshgrid(del_m,q);
 
 Del_col = Del(:); Q_col = Q(:); 
 
 num_combinations = numel(Q_col); 
-
+%%
 %k_eff = 1; %efficiency of dispersing seeds to habitable patches
 
 %z_x = 0.7; z_y = 0.7; z_m = 0.5; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
@@ -55,7 +63,6 @@ spp_init_no_y = [x_init; 0; m_init];
 spp_init_no_x = [0; y_init; m_init];
 spp_init = [x_init; y_init; m_init];
 
-f = 1.0; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
 %variable collectors across parameter sweeps
 
 % occupancy_del_m = zeros(size(del_m,1),3);
