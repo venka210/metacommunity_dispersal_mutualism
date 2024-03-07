@@ -1,8 +1,10 @@
 %clear all
 function [valid_parameters] = parameterRangeCheck(deltaValsRange,qValsRange,fVal)
 % Set up a grid of parameter values
-delta_values = linspace(deltaValsRange(1), deltaValsRange(2), 24); % Adjust the number of points as needed
-q_values = linspace(qValsRange(1), qValsRange(2), 50); % Adjust the number of points as needed
+%delta_values = linspace(deltaValsRange(1), deltaValsRange(2), 24); % Adjust the number of points as needed
+delta_values = deltaValsRange;
+q_values = qValsRange;
+%q_values = linspace(qValsRange(1), qValsRange(2), 20); % Adjust the number of points as needed
 
 aux_var_vals = {5,200,0.73,0.01,5,200,0.60,0.03,1,1,fVal};
 [r_x, K_x, alpha_xy, delta_x, r_y, K_y, alpha_yx, delta_y, a, d_m, f] = aux_var_vals{:};

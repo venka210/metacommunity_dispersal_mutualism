@@ -1,3 +1,4 @@
+
 %%%%%%%% This code vectorizes the ODEs that need to be solved for multiple
 %%%%%%%% varying parameters (here 'q' and 'del_m')
 clear all
@@ -30,21 +31,25 @@ k_x = 0.1; k_y = 0.1; k_m = 0.05;
 %q = 0.45;
 d_m = 1; a = 1.0;%reducing 'a' reduces dispersal rates where px > py
 
-del_m_all = 0:0.5:12; 
+del_m_all = 0:0.4:12; 
 
 q_all = 0.0:0.02:1.0;
 
+all_params = [repelem(del_m_all,size(q_all,2));repmat(q_all,1,size(del_m_all,2))];
+
 f = 1.0; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
 
-Del_and_Q = parameterRangeCheck([min(del_m_all);max(del_m_all)],[min(q_all);max(q_all)],f);
+Del_and_Q = parameterRangeCheck(del_m_all,q_all,f);
 
-del_m = unique(Del_and_Q(1,:)); q = unique(Del_and_Q(2,:));
+%del_m = unique(Del_and_Q(1,:)); q = unique(Del_and_Q(2,:));
 
-[Del,Q] = meshgrid(del_m,q);
+[allDel,allQ] = meshgrid(del_m_all,q_all);
+
+Del = Del_and_Q(1,:); Q = Del_and_Q(2,:);
 
 Del_col = Del(:); Q_col = Q(:); 
 
-num_combinations = numel(Q_col); 
+num_combinations = size(Del_and_Q,2);%numel(Q_col); 
 %%
 %k_eff = 1; %efficiency of dispersing seeds to habitable patches
 
@@ -168,8 +173,27 @@ end
 [t_syst, frac_occup] = ode45(@(t,y)vectorized_BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, c_my, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
     e_mx, e_mxy, e_my, num_combinations), tspan_meta, IC_betweenpatch(:), options2);
 
+%%
+num_tpts_t_syst = length(t_syst);
 
-num_tpts_t_syst = length(t_syst); frac_occup_3d = reshape(frac_occup(end,:), [],num_combinations);
+frac_occup_3d = [];
+j = 1;
+for i = 1:size(all_params,2)
+    if ismember(all_params(:,i),Del_and_Q)
+        disp(all_params(:,i))
+        disp('boo-yah!')
+        frac_occup_3d = [frac_occup_3d,[frac_occup(end, j);frac_occup(end, j+1);frac_occup(end, j+2)]];
+        j = j+3;
+    else
+        disp('boo-nah?')
+        frac_occup_3d = [frac_occup_3d,[-1;-1;-1]];
+    end
+end
+        
+
+%frac_occup_3d = reshape(frac_occup(end,:), [],num_combinations);
+
+
 % 
 % eta_check = 0.5..*sqrt((((lambda..*(1+(e_m../c_m))+c_x)-(e_x+mu))../(c_x+lambda))..^2 + 4..*(e_m../c_m)..*((mu-lambda)../(c_x+lambda)));
 %      figure()

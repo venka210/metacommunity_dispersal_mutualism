@@ -58,7 +58,6 @@ for i = 1:length(del_m)
     e_xm = e_xmin*((K_x/(local_dens_no_y(end,1)))^z_x); e_ym = e_ymin;
     e_xym = e_xmin*(K_x/(local_dens(end,1)))^z_x; e_yxm = e_ymin*(K_y/(local_dens(end,2)))^z_y;
     e_mx = e_mmin*(K_x/(local_dens_no_y(end,3)))^z_m; e_my = 0; e_mxy = e_mmin*(K_x/(local_dens(end,3)))^z_m; %assume max population size of mutualist is similar to that of x and y
-    e_my = 0;
 
     c_x0 = (k_x*del_x)*K_x*(1-(del_x/r_x)); c_y0 = (k_y*del_y)*K_y*(1-(del_y/r_y)); %patches with only one species
     c_xy = (k_x*del_x)*local_dens_no_m(end,1); c_yx = (k_y*del_y)*local_dens_no_m(end,2); %patches with 2 species
