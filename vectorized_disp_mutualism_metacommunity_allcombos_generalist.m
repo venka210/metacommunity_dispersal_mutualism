@@ -31,15 +31,15 @@ k_x = 0.1; k_y = 0.1; k_m = 0.05;
 %q = 0.45;
 d_m = 1; a = 1.0;%reducing 'a' reduces dispersal rates where px > py
 
-del_m_all = 0:0.4:12; 
+del_m_all = 0:0.3:12; 
 
 q_all = 0.0:0.02:1.0;
 
 all_params = [repelem(del_m_all,size(q_all,2));repmat(q_all,1,size(del_m_all,2))];
 
-f = 1.0; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
+f = 0.95; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
 
-Del_and_Q = parameterRangeCheck(del_m_all,q_all,f);
+[Del_and_Q, invalid_ind, good_bad] = parameterRangeCheck(del_m_all,q_all,f);
 
 %del_m = unique(Del_and_Q(1,:)); q = unique(Del_and_Q(2,:));
 
@@ -49,7 +49,7 @@ Del = Del_and_Q(1,:); Q = Del_and_Q(2,:);
 
 Del_col = Del(:); Q_col = Q(:); 
 
-num_combinations = size(Del_and_Q,2);%numel(Q_col); 
+num_combinations = size(Del_and_Q,2);   %numel(Q_col); 
 %%
 %k_eff = 1; %efficiency of dispersing seeds to habitable patches
 
@@ -179,13 +179,15 @@ num_tpts_t_syst = length(t_syst);
 frac_occup_3d = [];
 j = 1;
 for i = 1:size(all_params,2)
-    if ismember(all_params(:,i),Del_and_Q)
-        disp(all_params(:,i))
-        disp('boo-yah!')
+    %matching_index = find(ismember(all_params(:,i) == Del_and_Q(:,j))
+    if good_bad(i) == 1
+        %if any(matching_index ~= 0)
+        %disp(all_params(:,i))
+        %disp('boo-yah!')
         frac_occup_3d = [frac_occup_3d,[frac_occup(end, j);frac_occup(end, j+1);frac_occup(end, j+2)]];
         j = j+3;
     else
-        disp('boo-nah?')
+        %disp('boo-nah?')
         frac_occup_3d = [frac_occup_3d,[-1;-1;-1]];
     end
 end
@@ -212,11 +214,11 @@ end
 
 %% surface plot
 figure()
-surf(Del, Q, reshape(frac_occup_3d(1,:),numel(q),numel(del_m)),'EdgeColor','none')
+surf(del_m_all, q_all, reshape(frac_occup_3d(1,:),numel(q_all),numel(del_m_all)),'EdgeColor','none')
 colormap parula; freezeColors;
 hold on
-surf(Del, Q, reshape(frac_occup_3d(2,:),numel(q),numel(del_m)),'EdgeColor','none')
-surf(Del, Q, reshape(frac_occup_3d(3,:),numel(q),numel(del_m)),'EdgeColor','none')
+surf(del_m_all, q_all, reshape(frac_occup_3d(2,:),numel(q_all),numel(del_m_all)),'EdgeColor','none')
+surf(del_m_all, q_all, reshape(frac_occup_3d(3,:),numel(q_all),numel(del_m_all)),'EdgeColor','none')
 colormap winter; freezeColors;
 %surf(Del, Q,occupancy_del_m(:,:,1))
 xlabel('mutualist dispersal rate (\delta_m)')
