@@ -37,13 +37,13 @@ q_all = 0.0:0.02:1.0;
 
 all_params = [repelem(del_m_all,size(q_all,2));repmat(q_all,1,size(del_m_all,2))];
 
-f = 0.95; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
+f = 0.44; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
 
 [Del_and_Q, invalid_ind, good_bad] = parameterRangeCheck(del_m_all,q_all,f);
 
 %del_m = unique(Del_and_Q(1,:)); q = unique(Del_and_Q(2,:));
 
-[allDel,allQ] = meshgrid(del_m_all,q_all);
+%[allDel,allQ] = meshgrid(del_m_all,q_all);
 
 Del = Del_and_Q(1,:); Q = Del_and_Q(2,:);
 
@@ -210,6 +210,7 @@ end
 % eta2(i,:) = 4.*(e_m../c_m).*((mu-lambda)../(c_x+lambda));
 %save ("vectorized_q_del_m_varied.mat")
 %save (sprintf('generalist_occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d_f_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end),f*100),'Del','Q','frac_occup_3d','q','del_m','f');
+save (sprintf('generalist_occupancy_f_%0.2f.mat',f),'del_m_all','q_all','frac_occup_3d','f');
 
 
 %% surface plot
@@ -219,6 +220,7 @@ colormap parula; freezeColors;
 hold on
 surf(del_m_all, q_all, reshape(frac_occup_3d(2,:),numel(q_all),numel(del_m_all)),'EdgeColor','none')
 surf(del_m_all, q_all, reshape(frac_occup_3d(3,:),numel(q_all),numel(del_m_all)),'EdgeColor','none')
+view(2)
 colormap winter; freezeColors;
 %surf(Del, Q,occupancy_del_m(:,:,1))
 xlabel('mutualist dispersal rate (\delta_m)')
@@ -226,7 +228,7 @@ ylabel ('consumption fraction (q)')
 %xlim([1.0 29.0]);
 zlabel('fraction of patches occupied')
 %xline([1.0 2.6, 10.4, 26.9],'--',{'Exploitative (x extinct)','Mutualism (y fitter)','Mutualism (x fitter)', 'Mutualism (y fitter)'})
-title(sprintf('Patch occupancy vs mutualist dispersal predation rate; f = %0.1f',f))
+title(sprintf('Patch occupancy vs mutualist dispersal predation rate; f = %0.2f',f))
 legend('Species with mutualist (x)')%, 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
-%fig1name = sprintf('generalist_vector_occup_q_vs_del_m_f_%d.jpg',f*100);
-%print(fig1name,'-djpeg','-r600')
+fig1name = sprintf('generalist_vector_occup_q_vs_del_m_f_%0.2f.jpg',f);
+print(fig1name,'-djpeg','-r600')
