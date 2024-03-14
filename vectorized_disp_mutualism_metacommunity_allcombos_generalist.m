@@ -31,9 +31,9 @@ k_x = 0.1; k_y = 0.1; k_m = 0.05;
 %q = 0.45;
 d_m = 1; a = 1.0;%reducing 'a' reduces dispersal rates where px > py
 
-del_m_all = 0:0.3:12; 
+del_m_all = 0:0.1:12; 
 
-q_all = 0.0:0.02:1.0;
+q_all = 0.0:0.01:1.0;
 
 all_params = [repelem(del_m_all,size(q_all,2));repmat(q_all,1,size(del_m_all,2))];
 
@@ -186,15 +186,15 @@ for i = 1:size(all_params,2)
         %disp('boo-yah!')
         frac_occup_3d = [frac_occup_3d,[frac_occup(end, j);frac_occup(end, j+1);frac_occup(end, j+2)]];
         j = j+3;
-    elseif good_bad(i) == -1
-        frac_occup_3d = [frac_occup_3d,[-2;-2;-2]];
-    elseif good_bad(i) == -2
-        frac_occup_3d = [frac_occup_3d,[-3;-3;-3]];
-    elseif good_bad(i) == -3
-        frac_occup_3d = [frac_occup_3d,[-5;-5;-5]];
-    else %modify to an elseif condition based on what the good_bad(i) value is. It should be different based on whether x,y,or z is extinct
-        %disp('boo-nah?')
+    elseif good_bad(i) == -1 % x goes extinct
         frac_occup_3d = [frac_occup_3d,[-1;-1;-1]];
+    elseif good_bad(i) == -2
+        frac_occup_3d = [frac_occup_3d,[-2;-2;-2]]; %y goes extinct
+    elseif good_bad(i) == -3
+        frac_occup_3d = [frac_occup_3d,[-3;-3;-3]]; %m goes extinct
+    else %more than 1 species going extinct
+        %disp('boo-nah?')
+        frac_occup_3d = [frac_occup_3d,[-5;-5;-5]];
     end
 end
         
