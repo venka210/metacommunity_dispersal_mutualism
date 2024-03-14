@@ -18,10 +18,20 @@ good_bad_vals = [];
 for i = 1:size(delta_values,2)
     for j = 1:size(q_values,2)
         current_parameters = [delta_values(i); q_values(j)];
+        stateVariables = eqm_density_fn(current_parameters, r_x, K_x, alpha_xy, delta_x, r_y, K_y, alpha_yx, delta_y, a, d_m, f);
         % Check if the parameters satisfy constraints
         if all(constraintFunction(current_parameters) <= 0) && all(eqm_density_fn(current_parameters, r_x, K_x, alpha_xy, delta_x, r_y, K_y, alpha_yx, delta_y, a, d_m, f) >= 0)
             good_bad_vals = [good_bad_vals, 1];
             valid_parameters = [valid_parameters, current_parameters]; % we might ultimately need a function/command that tells us which of the species has out of bound densities 
+        elseif isequal(find(stateVariables < 0),1)
+            invalid_indices = [invalid_indices, [i;j]];
+            good_bad_vals = [good_bad_vals, -1];
+        elseif isequal(find(stateVariables < 0),2)
+            invalid_indices = [invalid_indices, [i;j]];
+            good_bad_vals = [good_bad_vals, -2];
+        elseif isequal(find(stateVariables < 0),3)
+            invalid_indices = [invalid_indices, [i;j]];
+            good_bad_vals = [good_bad_vals, -3];
         else
             invalid_indices = [invalid_indices, [i;j]];
             good_bad_vals = [good_bad_vals, 0];

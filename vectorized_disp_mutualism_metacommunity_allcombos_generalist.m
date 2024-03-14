@@ -37,7 +37,7 @@ q_all = 0.0:0.02:1.0;
 
 all_params = [repelem(del_m_all,size(q_all,2));repmat(q_all,1,size(del_m_all,2))];
 
-f = 0.44; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
+f = 0.96; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
 
 [Del_and_Q, invalid_ind, good_bad] = parameterRangeCheck(del_m_all,q_all,f);
 
@@ -180,13 +180,19 @@ frac_occup_3d = [];
 j = 1;
 for i = 1:size(all_params,2)
     %matching_index = find(ismember(all_params(:,i) == Del_and_Q(:,j))
-    if good_bad(i) == 1
+    if good_bad(i) == 1 %3 species coexistence
         %if any(matching_index ~= 0)
         %disp(all_params(:,i))
         %disp('boo-yah!')
         frac_occup_3d = [frac_occup_3d,[frac_occup(end, j);frac_occup(end, j+1);frac_occup(end, j+2)]];
         j = j+3;
-    else
+    elseif good_bad(i) == -1
+        frac_occup_3d = [frac_occup_3d,[-2;-2;-2]];
+    elseif good_bad(i) == -2
+        frac_occup_3d = [frac_occup_3d,[-3;-3;-3]];
+    elseif good_bad(i) == -3
+        frac_occup_3d = [frac_occup_3d,[-5;-5;-5]];
+    else %modify to an elseif condition based on what the good_bad(i) value is. It should be different based on whether x,y,or z is extinct
         %disp('boo-nah?')
         frac_occup_3d = [frac_occup_3d,[-1;-1;-1]];
     end
@@ -210,7 +216,7 @@ end
 % eta2(i,:) = 4.*(e_m../c_m).*((mu-lambda)../(c_x+lambda));
 %save ("vectorized_q_del_m_varied.mat")
 %save (sprintf('generalist_occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d_f_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end),f*100),'Del','Q','frac_occup_3d','q','del_m','f');
-save (sprintf('generalist_occupancy_f_%0.2f.mat',f),'del_m_all','q_all','frac_occup_3d','f');
+save (sprintf('generalist_occupancy_f_%0.2f.mat',f),'del_m_all','q_all','frac_occup_3d','f','good_bad');
 
 
 %% surface plot
