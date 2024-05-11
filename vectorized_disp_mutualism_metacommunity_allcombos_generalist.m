@@ -10,7 +10,7 @@ alpha_xy = 0.73; alpha_yx = 0.60; %really only affects y's local density and dis
 
 K_x = 200; K_y = 200; %no point touching this
 
-del_x = 0.01; del_y = 0.03; %del_m = 0:0.1:4; %I'm only not starting from zero because the computational costs are absurd
+del_x = 0.01; del_y = 0.03; %I'm only not starting from zero because the computational costs are absurd
 
 %a = 1; q = 1; d_m = 1;
 
@@ -18,11 +18,11 @@ k_eff = 0.1; %efficiency of dispersing seeds to habitable patches
 
 z_x = 0.8; z_y = 0.8; z_m = 0.5; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
 
-e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.05; e_mxmin = e_xmin;
+e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.008; %e_mxmin = e_xmin;
 
 tspan = [0,200];
 
-k_x = 0.1; k_y = 0.1; k_m = 0.05;
+k_x = 0.1; k_y = 0.1; k_m = 0.03;
 
 %x_init = 0.1; y_init = 0.1; m_init = 0.1;
 
@@ -31,13 +31,13 @@ k_x = 0.1; k_y = 0.1; k_m = 0.05;
 %q = 0.45;
 d_m = 1; a = 1.0;%reducing 'a' reduces dispersal rates where px > py
 
-del_m_all = 0:0.1:12; 
+del_m_all = 0:0.1:10; 
 
 q_all = 0.0:0.01:1.0;
 
 all_params = [repelem(del_m_all,size(q_all,2));repmat(q_all,1,size(del_m_all,2))];
 
-f = 0.96; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
+f = 0.92; % f is the fraction of diet consumed by frugivore that consists of 'x'. (1-f) is fraction that is 'y'
 
 [Del_and_Q, invalid_ind, good_bad] = parameterRangeCheck(del_m_all,q_all,f);
 
@@ -50,16 +50,6 @@ Del = Del_and_Q(1,:); Q = Del_and_Q(2,:);
 Del_col = Del(:); Q_col = Q(:); 
 
 num_combinations = size(Del_and_Q,2);   %numel(Q_col); 
-%%
-%k_eff = 1; %efficiency of dispersing seeds to habitable patches
-
-%z_x = 0.7; z_y = 0.7; z_m = 0.5; %scaling factors for patch extinction rates. changing z_m relative to z_x and z_m does not change qual. change results
-
-%e_xmin = 0.05;e_ymin = 0.05; e_mmin = 0.03; e_mxmin = e_xmin; 
-
-%tspan = [0,1000];
-
-%k_x = 0.08; k_y = 0.08; k_m = 0.02; %
 
 x_init = 0.01; y_init = 0.01; m_init = 0.01;
 
@@ -67,17 +57,6 @@ spp_init_no_m = [x_init; y_init; 0];
 spp_init_no_y = [x_init; 0; m_init];
 spp_init_no_x = [0; y_init; m_init];
 spp_init = [x_init; y_init; m_init];
-
-%variable collectors across parameter sweeps
-
-% occupancy_del_m = zeros(size(del_m,1),3);
-% eta_check = zeros(size(del_m,1),1);
-% mu_collector = zeros(size(del_m,1),1);
-% gamma = zeros(size(del_m,1),1);
-% cm_collector = zeros(size(del_m,1),1);
-% eta2 = zeros(size(del_m,1),1);
-% em_collector = zeros(size(del_m,1),1);
-% lambda_collector = zeros(size(del_m,1),1);
 
 %% Local patch dynamics
 thresholdValue = 10^-6;
@@ -125,7 +104,7 @@ e_mxy = e_mmin.*(K_x./(local_dens_3d(3,:))).^z_m; %assume max population size of
     
 %mu = e_mx - e_x;
 
-tspan_meta = [0,1000];
+tspan_meta = [0,300];
 
 % c_x = (k_x.*del_x)..*local_dens_no_m_3d(1,:);
 % c_y = k_y.*del_y..*local_dens_3d(2,:);
@@ -181,9 +160,6 @@ j = 1;
 for i = 1:size(all_params,2)
     %matching_index = find(ismember(all_params(:,i) == Del_and_Q(:,j))
     if good_bad(i) == 1 %3 species coexistence
-        %if any(matching_index ~= 0)
-        %disp(all_params(:,i))
-        %disp('boo-yah!')
         frac_occup_3d = [frac_occup_3d,[frac_occup(end, j);frac_occup(end, j+1);frac_occup(end, j+2)]];
         j = j+3;
     elseif good_bad(i) == -1 % x goes extinct
@@ -193,28 +169,10 @@ for i = 1:size(all_params,2)
     elseif good_bad(i) == -3
         frac_occup_3d = [frac_occup_3d,[-3;-3;-3]]; %m goes extinct
     else %more than 1 species going extinct
-        %disp('boo-nah?')
         frac_occup_3d = [frac_occup_3d,[-5;-5;-5]];
     end
 end
         
-
-%frac_occup_3d = reshape(frac_occup(end,:), [],num_combinations);
-
-
-% 
-% eta_check = 0.5..*sqrt((((lambda..*(1+(e_m../c_m))+c_x)-(e_x+mu))../(c_x+lambda))..^2 + 4..*(e_m../c_m)..*((mu-lambda)../(c_x+lambda)));
-%      figure()
-%      plot(t_syst(end-100:end),frac_occup(end-100:end,1:2));
-
-% mu_collector(i,1) = mu;
-% cm_collector(i,1) = c_m;
-% em_collector(i,1) = e_m;
-% lambda_collector(i,1) = lambda;
-% occupancy_del_m(i, :) = frac_occup(end,:);
-% gamma(i,1) = (0.5..*((lambda.*(1+(e_m../c_m))+c_x)-(e_x+mu)))../(c_x+lambda);%0.5.*(1-((mu-e_x-e_m)./(c_x+c_m)));
-% eta2(i,:) = 4.*(e_m../c_m).*((mu-lambda)../(c_x+lambda));
-%save ("vectorized_q_del_m_varied.mat")
 %save (sprintf('generalist_occupancy_qlow_%d_qhi_%d_delmlo_%d_delmhi_%d_f_%d.mat',q(1)*100,q(end)*100,del_m(1),del_m(end),f*100),'Del','Q','frac_occup_3d','q','del_m','f');
 save (sprintf('generalist_occupancy_f_%0.2f.mat',f),'del_m_all','q_all','frac_occup_3d','f','good_bad');
 
@@ -235,6 +193,21 @@ ylabel ('consumption fraction (q)')
 zlabel('fraction of patches occupied')
 %xline([1.0 2.6, 10.4, 26.9],'--',{'Exploitative (x extinct)','Mutualism (y fitter)','Mutualism (x fitter)', 'Mutualism (y fitter)'})
 title(sprintf('Patch occupancy vs mutualist dispersal predation rate; f = %0.2f',f))
-legend('Species with mutualist (x)')%, 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
+%legend('Species with mutualist (x)')%, 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
 fig1name = sprintf('generalist_vector_occup_q_vs_del_m_f_%0.2f.jpg',f);
 print(fig1name,'-djpeg','-r600')
+%%
+x_occ = reshape(frac_occup_3d(1,:),numel(q_all),numel(del_m_all));
+y_occ = reshape(frac_occup_3d(2,:),numel(q_all),numel(del_m_all));
+del_4 = x_occ(:,41)-y_occ(:,41);
+del_7 = x_occ(:,71)-y_occ(:,71);
+del_10 = x_occ(:,101)-y_occ(:,101);
+figure()
+plot(q_all, del_4, 'LineWidth',2); hold on; plot(q_all, del_7,'LineWidth',2); plot(q_all,del_10, 'LineWidth',2)
+yline(0)
+xlabel('Consumption fraction (q)')
+ylabel('Difference in patch occupancies (p_x - p_y)')
+legend('Low \delta_m', 'Intermediate \delta_m', 'High \delta_m','location','best')
+fig2name = sprintf('generalist_vector_occup_pxpy_vs_q_f_%0.2f.jpg',f);
+print(fig2name,'-djpeg','-r600')
+
