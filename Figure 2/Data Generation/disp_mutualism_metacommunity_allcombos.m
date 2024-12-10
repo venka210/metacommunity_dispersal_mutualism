@@ -106,7 +106,7 @@ for i = 1:length(del_m)
 
     
 end
-%save (sprintf('specialist_occupancy_q_%0.2f_del_m_max_%3.1f.mat',q,del_m(end)));
+save (sprintf('specialist_occupancy_q_%0.2f_del_m_max_%3.1f.mat',q,del_m(end)));
 %save (sprintf('specialist_occupancy_no_m_q_%0.2f_del_m_max_%3.1f.mat',q,del_m(end)));
 %% Figures
 
@@ -116,7 +116,7 @@ xlabel('time (global dynamics)')
 ylabel('fraction of patches occupied')
 title('Fraction of patches occupied vs time')
 legend('Species with mutualist (x)', 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
-%print(sprintf('occupancy_vs_time_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
+print(sprintf('occupancy_vs_time_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 %print(sprintf('occupancy_vs_time_no_m_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 
 figure()
@@ -125,20 +125,20 @@ xlabel('time (local dynamics)')
 ylabel('local patch density')
 title('Local patch population density vs time')
 legend('Species with mutualist (x)', 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
-%print(sprintf('locdens_vs_time_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
+print(sprintf('locdens_vs_time_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 %print(sprintf('locdens_vs_time_no_m_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 
 figure()
 plot(del_m, occupancy_del_m(:, 1:3),'LineWidth',3)
 xlabel('mutualist dispersal rate (\delta_m)')
-yline(0.1979,'g--','LineWidth',3)
+yline(0.1368,'g--','LineWidth',3)
 %xlim([1.0 29.0]);
 ylabel('fraction of patches occupied (p_x, p_y, p_m)')
 %xline([1.0 2.6, 10.4, 26.9],'--',{'Exploitative (x extinct)','Mutualism (y fitter)','Mutualism (x fitter)', 'Mutualism (y fitter)'})
 title('Fraction of patches occupied vs mutualist dispersal rate')
 legend('Species with mutualist (x)', 'Species without mutualist (y)', 'mutualist (m)', 'p_x w/o mutualist','location', 'east')
 %fig1name = sprintf('occupancy_vs_del_m.jpeg');
-%print(sprintf('occupancy_vs_delm_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
+print(sprintf('occupancy_vs_delm_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 %print(sprintf('occupancy_vs_delm_no_m_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 
 

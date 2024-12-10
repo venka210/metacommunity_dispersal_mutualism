@@ -37,15 +37,13 @@ q_all = 0.0:0.01:1.0;
 
 all_params = [repelem(del_m_all,size(q_all,2));repmat(q_all,1,size(del_m_all,2))];
 
-f = 0.92; % f is the fraction of diet consumed by frugivore that consists 
+f = 1.0; % f is the fraction of diet consumed by frugivore that consists 
 % of 'x'. (1-f) is fraction that is 'y'.
 % Change this value to observe different types of generalists or specialists
 
-[Del_and_Q, invalid_ind, good_bad] = parameterRangeCheck(del_m_all,q_all,f);
+[Del_and_Q, invalid_ind, good_bad] = parameterRangeCheck(del_m_all,q_all,f); %checks feasibility 
+% of parameter values chosen so that community is stable.
 
-%del_m = unique(Del_and_Q(1,:)); q = unique(Del_and_Q(2,:));
-
-%[allDel,allQ] = meshgrid(del_m_all,q_all);
 
 Del = Del_and_Q(1,:); Q = Del_and_Q(2,:);
 

@@ -7,7 +7,7 @@ alpha_xy = 0.73; alpha_yx = 0.60; %really only affects y's local density and dis
 
 K_x = 200; K_y = 200; %no point touching this
 
-del_x = 0.01; del_y = 0.03; del_m = 0:0.1:10;%del_m = 0:0.1:4; %I'm only not starting from zero because the computational costs are absurd
+del_x = 0.001; del_y = 0.03; del_m = 0:0.1:10;%del_m = 0:0.1:4; 
 
 k_eff = 0.1; %efficiency of dispersing seeds to habitable patches
 
@@ -39,13 +39,14 @@ occupancy_del_m = zeros(size(del_m,1),3);
 for i = 1:length(del_m)
     
     options = odeset('NonNegative',[1,2,3]);
-    [t_patch_no_m,local_dens_no_m] = ode45(@(t,y)LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, del_m(i), a, q, d_m), tspan/10, spp_init_no_m, options);
-    [t_patch_no_y,local_dens_no_y] = ode45(@(t,y)LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, del_m(i), a, q, d_m), tspan/10, spp_init_no_y,options);
-    [t_patch,local_dens] = ode45(@(t,y)LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, del_m(i), a, q, d_m), tspan, spp_init, options);
+    [t_patch_no_m,local_dens_no_m] = ode15s(@(t,y)LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, del_m(i), a, q, d_m), tspan/10, spp_init_no_m, options);
+    [t_patch_no_y,local_dens_no_y] = ode15s(@(t,y)LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, del_m(i), a, q, d_m), tspan/10, spp_init_no_y,options);
+    [t_patch,local_dens] = ode15s(@(t,y)LocalSpeciesInteraction(t,y,r_x,r_y,alpha_xy,alpha_yx, K_x, K_y, del_x, del_y, del_m(i), a, q, d_m), tspan, spp_init, options);
 
     %      figure()
     %      plot(t_patch,local_dens)
-        %% metacommunity dynamics
+
+    %% metacommunity dynamics
     e_x0 = e_xmin;e_y0 = e_ymin;
     e_xy = e_xmin.*((K_x./(local_dens_no_m(end,1))).^z_x); e_yx = e_ymin.*((K_y./(local_dens_no_m(end,2))).^z_y);
     e_xm = e_xmin.*((K_x./(local_dens_no_y(end,1))).^z_x); e_ym = e_ymin;
@@ -87,7 +88,7 @@ for i = 1:length(del_m)
     %     frac_occup_init(3,1) = 0;
     % end
 
-    [t_syst, frac_occup] = ode45(@(t,y)vectorized_BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, c_my, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
+    [t_syst, frac_occup] = ode15s(@(t,y)vectorized_BetweenPatchDynamics_allcombos(t,y, c_x0, c_xm, c_xym, c_xy, c_y0, c_ym, c_yxm, c_yx, c_mx, c_mxy, c_my, e_x0, e_xy, e_xm, e_xym, e_y0, e_yx, e_ym, e_yxm, ...
     e_mx, e_mxy, e_my, 1), tspan_meta, frac_occup_init, options2);
     %frac_occup(end,1) = 0;
     
@@ -102,11 +103,10 @@ for i = 1:length(del_m)
 %     cm_collector(i,1) = c_m;
 %     em_collector(i,1) = e_m;
 %     lambda_collector(i,1) = lambda;
-     occupancy_del_m(i, :) = frac_occup(end,:);
-
-    
+     occupancy_del_m(i, :) = frac_occup(end,:); 
 end
-%save (sprintf('specialist_occupancy_q_%0.2f_del_m_max_%3.1f.mat',q,del_m(end)));
+occupancy_del_m(occupancy_del_m < 10^-3) = 0;
+save (sprintf('specialist_occupancy_ext_q_%0.2f_del_m_max_%3.1f.mat',q,del_m(end)));
 %save (sprintf('specialist_occupancy_no_m_q_%0.2f_del_m_max_%3.1f.mat',q,del_m(end)));
 %% Figures
 
@@ -116,7 +116,7 @@ xlabel('time (global dynamics)')
 ylabel('fraction of patches occupied')
 title('Fraction of patches occupied vs time')
 legend('Species with mutualist (x)', 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
-%print(sprintf('occupancy_vs_time_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
+print(sprintf('occupancy_vs_time_ext_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 %print(sprintf('occupancy_vs_time_no_m_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 
 figure()
@@ -125,20 +125,20 @@ xlabel('time (local dynamics)')
 ylabel('local patch density')
 title('Local patch population density vs time')
 legend('Species with mutualist (x)', 'Species without mutualist (y)', 'mutualist (m)', 'location', 'best' )
-%print(sprintf('locdens_vs_time_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
+print(sprintf('locdens_vs_time_ext_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 %print(sprintf('locdens_vs_time_no_m_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 
 figure()
 plot(del_m, occupancy_del_m(:, 1:3),'LineWidth',3)
+yline(0,'g--','LineWidth',3)
 xlabel('mutualist dispersal rate (\delta_m)')
-yline(0.1979,'g--','LineWidth',3)
 %xlim([1.0 29.0]);
 ylabel('fraction of patches occupied (p_x, p_y, p_m)')
 %xline([1.0 2.6, 10.4, 26.9],'--',{'Exploitative (x extinct)','Mutualism (y fitter)','Mutualism (x fitter)', 'Mutualism (y fitter)'})
 title('Fraction of patches occupied vs mutualist dispersal rate')
 legend('Species with mutualist (x)', 'Species without mutualist (y)', 'mutualist (m)', 'p_x w/o mutualist','location', 'east')
 %fig1name = sprintf('occupancy_vs_del_m.jpeg');
-%print(sprintf('occupancy_vs_delm_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
+print(sprintf('occupancy_vs_delm_ext_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 %print(sprintf('occupancy_vs_delm_no_m_q_%0.2f_del_m_max_%3.1f.jpg',q,del_m(end)),'-djpeg','-r600')
 
 
